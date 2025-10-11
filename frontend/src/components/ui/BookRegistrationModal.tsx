@@ -12,6 +12,7 @@ interface Book {
   publisher?: string;
   coverImage?: string;
   isbn?: string;
+  isbn13?: string;
   pageCount?: number;
 }
 
@@ -38,7 +39,9 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
         publisher: bookData.publisher,
         cover_image_url: bookData.coverImage,
         isbn: bookData.isbn,
+        isbn13: bookData.isbn13,
         page_count: bookData.pageCount,
+        aladin_id: bookData.id, // 알라딘 itemId
       });
       return response.data;
     },
@@ -65,15 +68,10 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
     if (!book) return;
 
     try {
-      // 1. 먼저 books 테이블에 책 등록 (이미 있으면 기존 ID 반환)
-      let bookId: string;
-
-      if (book.id) {
-        bookId = book.id;
-      } else {
-        const bookResult = await createBookMutation.mutateAsync(book);
-        bookId = bookResult.data.id;
-      }
+      // 1. 먼저 books 테이블에 책 등록 (중복이면 기존 UUID 반환)
+      // book.id는 알라딘 itemId이므로 항상 POST /api/books를 호출해야 함
+      const bookResult = await createBookMutation.mutateAsync(book);
+      const bookId = bookResult.data.id;
 
       // 2. reading_books 테이블에 등록
       await registerReadingBookMutation.mutateAsync({

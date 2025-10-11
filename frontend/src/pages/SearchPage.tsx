@@ -49,6 +49,7 @@ export default function SearchPage() {
       publisher: book.publisher,
       coverImage: book.coverImage,
       isbn: book.isbn,
+      isbn13: book.isbn13,
       pageCount: book.pageCount,
     });
     setIsModalOpen(true);
