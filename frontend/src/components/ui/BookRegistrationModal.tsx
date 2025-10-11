@@ -46,7 +46,7 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
 
   // reading_books 테이블에 등록
   const registerReadingBookMutation = useMutation({
-    mutationFn: async (data: { book_id: string; status: ReadingStatus; current_page?: number }) => {
+    mutationFn: async (data: { book_id: string; status: ReadingStatus; current_page?: number; total_pages?: number | null }) => {
       const response = await api.post('/api/v1/reading-books', data);
       return response.data;
     },
