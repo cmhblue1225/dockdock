@@ -23,7 +23,6 @@ export default function OnboardingPage() {
   const [currentGenreIndex, setCurrentGenreIndex] = useState(0);
 
   // 저장
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   // 장르 목록 로드
@@ -93,7 +92,6 @@ export default function OnboardingPage() {
 
   // 선호도 저장 및 완료
   async function completeOnboarding() {
-    setSaving(true);
     setError('');
     setStep('loading');
 
@@ -108,8 +106,6 @@ export default function OnboardingPage() {
     } catch (err: any) {
       setError(err.message || '선호도 저장에 실패했습니다');
       setStep('books');
-    } finally {
-      setSaving(false);
     }
   }
 

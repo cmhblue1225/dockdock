@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   // 온보딩 상태 확인 (온보딩 페이지가 아닐 때만)
-  const shouldCheckOnboarding = user && location.pathname !== '/onboarding';
+  const shouldCheckOnboarding = !!user && location.pathname !== '/onboarding';
   const { data: onboardingCompleted, isLoading: onboardingLoading } = useQuery({
     queryKey: ['onboarding', 'status', user?.id],
     queryFn: getOnboardingStatus,
