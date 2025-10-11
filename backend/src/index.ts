@@ -31,10 +31,10 @@ app.use(helmet());
 
 // CORS 설정
 const allowedOrigins = [
-  'http://localhost:5173',              // 로컬 개발
-  'http://localhost:3000',              // 로컬 개발 (대체 포트)
-  'https://dockdock.minhyuk.kr',        // 프로덕션 프론트엔드
-  'https://dockdock-l0e8.onrender.com'  // Render 백엔드 (Swagger 문서용)
+  'http://localhost:5173',                           // 로컬 개발
+  'http://localhost:3000',                           // 로컬 개발 (대체 포트)
+  'https://dockdock.minhyuk.kr',                     // 프로덕션 프론트엔드
+  'https://dockdock-production.up.railway.app'       // Railway 백엔드 (Swagger 문서용)
 ];
 
 // 환경 변수로 추가 origin 허용
