@@ -12,8 +12,8 @@ import booksRoutes from './routes/books.routes';
 import readingRoutes from './routes/reading.routes';
 import recordRoutes from './routes/record.routes';
 import reviewRoutes from './routes/review.routes';
+import photoRoutes from './routes/photo.routes';
 // TODO: 추가 라우트
-// import uploadRoutes from './routes/upload.routes';
 // import aiRoutes from './routes/ai.routes';
 
 // 환경 변수 로드
@@ -103,9 +103,9 @@ app.use('/api/books', booksRoutes);
 app.use('/api/v1/reading-books', readingRoutes);
 app.use('/api/v1/reading-records', recordRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/photos', photoRoutes);
 
 // TODO: 추가 라우트 등록
-// app.use('/api/upload', uploadRoutes);
 // app.use('/api/ai', aiRoutes);
 
 // ============================================

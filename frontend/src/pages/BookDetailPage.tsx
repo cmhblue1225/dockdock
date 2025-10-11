@@ -11,8 +11,10 @@ interface ReadingBook {
   book_id: string;
   status: 'wishlist' | 'reading' | 'completed';
   current_page: number;
-  start_date: string | null;
-  end_date: string | null;
+  total_pages: number | null;
+  progress_percent: number | null;
+  started_at: string | null;
+  completed_at: string | null;
   book: {
     id: string;
     title: string;
@@ -37,13 +39,29 @@ export default function BookDetailPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'records' | 'stats'>('records');
+  const [activeTab, setActiveTab] = useState<'records' | 'photos'>('records');
+
+  // 기록 추가 모달
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [newRecord, setNewRecord] = useState({
     content: '',
     page_number: '',
     record_type: 'note' as 'note' | 'quote' | 'thought',
   });
+
+  // 페이지 업데이트 모달
+  const [isPageUpdateModalOpen, setIsPageUpdateModalOpen] = useState(false);
+  const [newPageNumber, setNewPageNumber] = useState('');
+
+  // 독서 완료 모달
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [reviewData, setReviewData] = useState({
+    rating: 5,
+    review_text: '',
+  });
+
+  // 사진 업로드 (추후 구현 예정)
+  const [_selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // 책 정보 조회
   const { data: readingBookData, isLoading: bookLoading } = useQuery({
@@ -65,6 +83,27 @@ export default function BookDetailPage() {
       return response.data;
     },
     enabled: !!readingBookId,
+  });
+
+  // 현재 페이지 업데이트
+  const updatePageMutation = useMutation({
+    mutationFn: async (currentPage: number) => {
+      const response = await api.patch(`/api/v1/reading-books/${readingBookId}`, {
+        current_page: currentPage,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
+      queryClient.invalidateQueries({ queryKey: ['reading-books'] });
+      showToast('현재 페이지가 업데이트되었습니다', 'success');
+      setIsPageUpdateModalOpen(false);
+      setNewPageNumber('');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error?.message || '페이지 업데이트에 실패했습니다';
+      showToast(message, 'error');
+    },
   });
 
   // 기록 생성
@@ -90,6 +129,61 @@ export default function BookDetailPage() {
     },
   });
 
+  // 독서 완료 처리
+  const completeMutation = useMutation({
+    mutationFn: async () => {
+      // 1. 상태를 completed로 변경
+      await api.patch(`/api/v1/reading-books/${readingBookId}`, {
+        status: 'completed',
+      });
+
+      // 2. 리뷰 작성
+      await api.post('/api/v1/reviews', {
+        reading_book_id: readingBookId,
+        rating: reviewData.rating,
+        review_text: reviewData.review_text,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
+      queryClient.invalidateQueries({ queryKey: ['reading-books'] });
+      showToast('독서를 완료했습니다!', 'success');
+      setIsCompleteModalOpen(false);
+      // 완독 페이지로 이동
+      navigate('/completed');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error?.message || '독서 완료 처리에 실패했습니다';
+      showToast(message, 'error');
+    },
+  });
+
+  // 사진 업로드 (추후 구현 예정)
+  // @ts-expect-error - 추후 사진 갤러리 탭에서 사용 예정
+  const _uploadPhotoMutation = useMutation({
+    mutationFn: async ({ file, recordId }: { file: File; recordId: string }) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('reading_record_id', recordId);
+
+      const response = await api.post('/api/v1/photos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reading-records', readingBookId] });
+      showToast('사진이 업로드되었습니다', 'success');
+      setSelectedFile(null);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error?.message || '사진 업로드에 실패했습니다';
+      showToast(message, 'error');
+    },
+  });
+
   const handleCreateRecord = () => {
     if (!newRecord.content.trim()) {
       showToast('내용을 입력해주세요', 'warning');
@@ -106,13 +200,34 @@ export default function BookDetailPage() {
     });
   };
 
+  const handleUpdatePage = () => {
+    const pageNum = parseInt(newPageNumber);
+    if (isNaN(pageNum) || pageNum < 0) {
+      showToast('유효한 페이지 번호를 입력해주세요', 'warning');
+      return;
+    }
+
+    if (readingBook?.book.page_count && pageNum > readingBook.book.page_count) {
+      showToast(`페이지는 ${readingBook.book.page_count}페이지 이하여야 합니다`, 'warning');
+      return;
+    }
+
+    updatePageMutation.mutate(pageNum);
+  };
+
+  const handleComplete = () => {
+    if (reviewData.rating < 1 || reviewData.rating > 5) {
+      showToast('평점은 1-5 사이여야 합니다', 'warning');
+      return;
+    }
+
+    completeMutation.mutate();
+  };
+
   const readingBook: ReadingBook | undefined = readingBookData?.data;
   const records: ReadingRecord[] = recordsData?.data?.items || [];
 
-  const progress =
-    readingBook?.book.page_count && readingBook.current_page > 0
-      ? Math.round((readingBook.current_page / readingBook.book.page_count) * 100)
-      : 0;
+  const progress = readingBook?.progress_percent || 0;
 
   const recordTypeLabels = {
     note: { icon: '📝', label: '메모', color: 'bg-blue-100 text-blue-700' },
@@ -167,7 +282,7 @@ export default function BookDetailPage() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-text-secondary">진행률</span>
-                    <span className="text-lg font-bold text-ios-green">{progress}%</span>
+                    <span className="text-lg font-bold text-ios-green">{Math.round(progress)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
@@ -180,6 +295,27 @@ export default function BookDetailPage() {
                   </p>
                 </div>
               )}
+
+              {/* 액션 버튼 */}
+              <div className="flex gap-2 mt-4">
+                {readingBook.status === 'reading' && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setNewPageNumber(readingBook.current_page.toString());
+                        setIsPageUpdateModalOpen(true);
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      📖 페이지 업데이트
+                    </Button>
+                    <Button onClick={() => setIsCompleteModalOpen(true)} variant="primary" size="sm">
+                      ✅ 독서 완료하기
+                    </Button>
+                  </>
+                )}
+              </div>
 
               {/* 상태 뱃지 */}
               <div className="mt-4">
@@ -217,14 +353,14 @@ export default function BookDetailPage() {
               📝 독서 기록
             </button>
             <button
-              onClick={() => setActiveTab('stats')}
+              onClick={() => setActiveTab('photos')}
               className={`flex-1 px-6 py-4 font-medium transition-colors ${
-                activeTab === 'stats'
+                activeTab === 'photos'
                   ? 'text-ios-green border-b-2 border-ios-green'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              📊 통계
+              📷 사진
             </button>
           </div>
 
@@ -291,10 +427,10 @@ export default function BookDetailPage() {
               </div>
             )}
 
-            {activeTab === 'stats' && (
+            {activeTab === 'photos' && (
               <div className="text-center py-12">
-                <div className="text-5xl mb-3">📊</div>
-                <p className="text-text-secondary">통계 기능은 곧 추가될 예정입니다</p>
+                <div className="text-5xl mb-3">📷</div>
+                <p className="text-text-secondary">사진 갤러리 기능은 곧 추가될 예정입니다</p>
               </div>
             )}
           </div>
@@ -392,6 +528,141 @@ export default function BookDetailPage() {
               isLoading={createRecordMutation.isPending}
             >
               저장
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 페이지 업데이트 모달 */}
+      <Modal
+        isOpen={isPageUpdateModalOpen}
+        onClose={() => {
+          setIsPageUpdateModalOpen(false);
+          setNewPageNumber('');
+        }}
+        title="현재 페이지 업데이트"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              현재 읽고 있는 페이지
+            </label>
+            <input
+              type="number"
+              value={newPageNumber}
+              onChange={(e) => setNewPageNumber(e.target.value)}
+              placeholder="예: 156"
+              min="0"
+              max={readingBook.book.page_count || undefined}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent"
+            />
+            {readingBook.book.page_count && (
+              <p className="text-xs text-text-secondary mt-2">
+                총 {readingBook.book.page_count}페이지
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsPageUpdateModalOpen(false);
+                setNewPageNumber('');
+              }}
+              className="flex-1"
+              disabled={updatePageMutation.isPending}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleUpdatePage}
+              className="flex-1"
+              isLoading={updatePageMutation.isPending}
+            >
+              업데이트
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 독서 완료 모달 */}
+      <Modal
+        isOpen={isCompleteModalOpen}
+        onClose={() => setIsCompleteModalOpen(false)}
+        title="독서 완료"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="text-6xl mb-3">🎉</div>
+            <h3 className="text-xl font-bold text-text-primary mb-2">
+              축하합니다!
+            </h3>
+            <p className="text-text-secondary">
+              이 책에 대한 평가를 남겨주세요
+            </p>
+          </div>
+
+          {/* 평점 */}
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-3 text-center">
+              평점을 선택하세요
+            </label>
+            <div className="flex items-center justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewData({ ...reviewData, rating: star })}
+                  className="transition-transform hover:scale-110"
+                >
+                  <svg
+                    className={`w-12 h-12 ${
+                      star <= reviewData.rating
+                        ? 'fill-warning text-warning'
+                        : 'fill-gray-300 text-gray-300'
+                    }`}
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 후기 */}
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              후기 (선택사항)
+            </label>
+            <textarea
+              value={reviewData.review_text}
+              onChange={(e) => setReviewData({ ...reviewData, review_text: e.target.value })}
+              placeholder="이 책에 대한 생각을 자유롭게 남겨주세요..."
+              rows={6}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent resize-none"
+            />
+          </div>
+
+          {/* 버튼 */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsCompleteModalOpen(false)}
+              className="flex-1"
+              disabled={completeMutation.isPending}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleComplete}
+              className="flex-1"
+              isLoading={completeMutation.isPending}
+            >
+              완료
             </Button>
           </div>
         </div>

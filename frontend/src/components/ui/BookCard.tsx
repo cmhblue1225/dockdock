@@ -4,6 +4,7 @@ interface BookCardProps {
   coverImageUrl?: string;
   title: string;
   author?: string;
+  subtitle?: string; // 추가 정보 (완독일 등)
   progress?: number; // 0-100
   rating?: number; // 1-5
   icon?: string; // 이모지 또는 아이콘
@@ -16,6 +17,7 @@ export default function BookCard({
   coverImageUrl,
   title,
   author,
+  subtitle,
   progress,
   rating,
   icon = '📚',
@@ -53,6 +55,12 @@ export default function BookCard({
         {author && (
           <p className="text-xs text-text-secondary mb-2 line-clamp-1">
             {author}
+          </p>
+        )}
+
+        {subtitle && (
+          <p className="text-xs text-text-secondary mb-2 line-clamp-1">
+            {subtitle}
           </p>
         )}
 

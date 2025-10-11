@@ -12,6 +12,8 @@ import SearchPage from './pages/SearchPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import BookDetailPage from './pages/BookDetailPage';
+import ReadingBooksPage from './pages/ReadingBooksPage';
+import CompletedBooksPage from './pages/CompletedBooksPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -58,6 +60,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/reading" element={<ReadingBooksPage />} />
+            <Route path="/completed" element={<CompletedBooksPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/books/:readingBookId" element={<BookDetailPage />} />
