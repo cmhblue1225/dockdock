@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { getAladinClient } from '../services/aladin.service';
 import { BookSearchParams } from '../../../shared/types/book.types';
+import { supabase } from '../services/supabase.service';
+import { sendSuccess, sendError, ErrorCodes } from '../utils/response.util';
 
 /**
  * 책 검색 및 조회 컨트롤러
@@ -256,6 +258,85 @@ export const booksController = {
         message: '검색 중 오류가 발생했습니다',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  },
+
+  /**
+   * 책을 데이터베이스에 저장
+   *
+   * POST /api/books
+   *
+   * 검색된 책을 books 테이블에 저장하고 book_id를 반환
+   * 중복 체크: isbn13이 이미 있으면 기존 책 정보 반환
+   */
+  createBook: async (req: Request, res: Response) => {
+    try {
+      const {
+        title,
+        author,
+        publisher,
+        cover_image_url,
+        isbn,
+        isbn13,
+        page_count,
+        published_date,
+        description,
+        category,
+        aladin_id
+      } = req.body;
+
+      // 필수 필드 검증
+      if (!title) {
+        return sendError(res, ErrorCodes.VALIDATION_ERROR, '책 제목은 필수입니다', null, 400);
+      }
+
+      // isbn13으로 중복 체크
+      if (isbn13) {
+        const { data: existingBook } = await supabase
+          .from('books')
+          .select('*')
+          .eq('isbn13', isbn13)
+          .single();
+
+        if (existingBook) {
+          return sendSuccess(res, existingBook, '이미 등록된 책입니다', 200);
+        }
+      }
+
+      // 책 저장
+      const { data, error } = await supabase
+        .from('books')
+        .insert({
+          title,
+          author,
+          publisher,
+          cover_image_url,
+          isbn,
+          isbn13,
+          page_count,
+          published_date,
+          description,
+          category,
+          aladin_id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('책 저장 실패:', error);
+        return sendError(res, ErrorCodes.DATABASE_ERROR, '책 저장에 실패했습니다', error.message, 500);
+      }
+
+      return sendSuccess(res, data, '책이 성공적으로 저장되었습니다', 201);
+    } catch (error) {
+      console.error('책 저장 오류:', error);
+      return sendError(
+        res,
+        ErrorCodes.INTERNAL_ERROR,
+        '책 저장 중 오류가 발생했습니다',
+        error instanceof Error ? error.message : undefined,
+        500
+      );
     }
   }
 };

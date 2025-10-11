@@ -79,6 +79,7 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
       await registerReadingBookMutation.mutateAsync({
         book_id: bookId,
         status,
+        total_pages: book.pageCount || null,
         ...(status === 'reading' && currentPage > 0 && { current_page: currentPage }),
       });
     } catch (error) {

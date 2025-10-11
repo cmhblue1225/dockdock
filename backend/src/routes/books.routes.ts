@@ -205,6 +205,72 @@ router.get('/:bookId', booksController.getBookDetail);
 /**
  * @swagger
  * /api/books:
+ *   post:
+ *     summary: 책을 데이터베이스에 저장
+ *     description: |
+ *       검색된 책을 books 테이블에 저장합니다.
+ *       isbn13이 이미 존재하면 기존 책 정보를 반환합니다.
+ *     tags: [Books]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: 책 제목
+ *                 example: "클린 코드"
+ *               author:
+ *                 type: string
+ *                 description: 저자
+ *                 example: "로버트 C. 마틴"
+ *               publisher:
+ *                 type: string
+ *                 description: 출판사
+ *                 example: "인사이트"
+ *               cover_image_url:
+ *                 type: string
+ *                 description: 표지 이미지 URL
+ *               isbn:
+ *                 type: string
+ *                 description: ISBN-10
+ *               isbn13:
+ *                 type: string
+ *                 description: ISBN-13
+ *               page_count:
+ *                 type: number
+ *                 description: 페이지 수
+ *               published_date:
+ *                 type: string
+ *                 description: 출판일
+ *               description:
+ *                 type: string
+ *                 description: 책 설명
+ *               category:
+ *                 type: string
+ *                 description: 카테고리
+ *               aladin_id:
+ *                 type: string
+ *                 description: 알라딘 상품 ID
+ *     responses:
+ *       201:
+ *         description: 책이 성공적으로 저장됨
+ *       200:
+ *         description: 이미 존재하는 책 (중복)
+ *       400:
+ *         description: 필수 필드 누락
+ *       500:
+ *         description: 서버 오류
+ */
+router.post('/', booksController.createBook);
+
+/**
+ * @swagger
+ * /api/books:
  *   get:
  *     summary: 통합 검색 (제목 또는 ISBN 자동 판별)
  *     description: |
