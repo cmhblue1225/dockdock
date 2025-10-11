@@ -9,9 +9,12 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
+import WishlistPage from './pages/WishlistPage';
+import ProfilePage from './pages/ProfilePage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
+import { AppLayout } from './components/layout';
 
 // Store
 import { useAuthStore } from './stores/authStore';
@@ -43,31 +46,20 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-          {/* 보호된 라우트 */}
+          {/* 보호된 라우트 - AppLayout으로 감싸기 */}
           <Route
-            path="/"
             element={
               <ProtectedRoute>
-                <HomePage />
+                <AppLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/library"
-            element={
-              <ProtectedRoute>
-                <LibraryPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <ProtectedRoute>
-                <SearchPage />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/library" element={<LibraryPage />} />
+          </Route>
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />

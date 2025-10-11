@@ -1,10 +1,23 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
+import BookRegistrationModal from '../components/ui/BookRegistrationModal';
+
+interface Book {
+  id?: string;
+  title: string;
+  author?: string;
+  publisher?: string;
+  coverImage?: string;
+  isbn?: string;
+  pageCount?: number;
+}
 
 export default function SearchPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 책 검색 쿼리
   const { data, isLoading, error } = useQuery({
@@ -26,6 +39,24 @@ export default function SearchPage() {
     if (searchTerm.trim()) {
       setActiveSearch(searchTerm.trim());
     }
+  };
+
+  const handleBookClick = (book: any) => {
+    setSelectedBook({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      publisher: book.publisher,
+      coverImage: book.coverImage,
+      isbn: book.isbn,
+      pageCount: book.pageCount,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBook(null);
   };
 
   return (
@@ -78,7 +109,8 @@ export default function SearchPage() {
               {(data.data.books || [data.data]).map((book: any) => (
                 <div
                   key={book.id}
-                  className="bg-surface p-6 rounded-xl shadow-custom hover:shadow-custom-lg transition-shadow"
+                  onClick={() => handleBookClick(book)}
+                  className="bg-surface p-6 rounded-xl shadow-custom hover:shadow-custom-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <img
                     src={book.coverImage}
@@ -89,7 +121,11 @@ export default function SearchPage() {
                     {book.title}
                   </h3>
                   <p className="text-text-secondary text-sm mb-2">{book.author}</p>
-                  <p className="text-text-secondary text-sm">{book.publisher}</p>
+                  <p className="text-text-secondary text-sm mb-3">{book.publisher}</p>
+                  <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                    <span className="text-ios-green text-sm font-medium">클릭하여 등록</span>
+                    <span className="text-ios-green">→</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -105,6 +141,13 @@ export default function SearchPage() {
           </div>
         )}
       </div>
+
+      {/* 책 등록 모달 */}
+      <BookRegistrationModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        book={selectedBook}
+      />
     </div>
   );
 }
