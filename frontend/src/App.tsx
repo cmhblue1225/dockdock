@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Pages
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
@@ -40,6 +41,7 @@ function App() {
           {/* 공개 라우트 */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           {/* 보호된 라우트 */}
           <Route
