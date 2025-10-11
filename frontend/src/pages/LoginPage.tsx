@@ -156,13 +156,12 @@ export default function LoginPage() {
               type="button"
               onClick={handleKakaoLogin}
               disabled={socialLoading}
-              className="w-full overflow-hidden rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ minHeight: '44px' }}
+              className="w-full h-[50px] overflow-hidden rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <img
                 src="/images/kakao/kakao_login_medium_wide.png"
                 alt="카카오 로그인"
-                className="w-full h-auto"
+                className="w-full h-full object-cover"
               />
             </button>
           </div>
