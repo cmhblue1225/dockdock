@@ -271,7 +271,7 @@ export const booksController = {
    */
   createBook: async (req: Request, res: Response) => {
     try {
-      const {
+      let {
         title,
         author,
         publisher,
@@ -300,6 +300,21 @@ export const booksController = {
 
         if (existingBook) {
           return sendSuccess(res, existingBook, '이미 등록된 책입니다', 200);
+        }
+      }
+
+      // page_count가 없고 aladin_id가 있으면 상세 정보 조회
+      if (!page_count && aladin_id) {
+        try {
+          const aladinClient = getAladinClient();
+          const detailBook = await aladinClient.getBookDetail(aladin_id);
+          if (detailBook && detailBook.pageCount) {
+            page_count = detailBook.pageCount;
+            console.log(`알라딘 상세 조회로 페이지 수 획득: ${page_count}`);
+          }
+        } catch (error) {
+          console.warn('알라딘 상세 조회 실패 (계속 진행):', error);
+          // 상세 조회 실패해도 책 등록은 계속 진행
         }
       }
 

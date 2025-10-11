@@ -64,6 +64,10 @@ export default function BookDetailPage() {
   // 페이지 업데이트 (슬라이더로 변경)
   const [currentPageInput, setCurrentPageInput] = useState(0);
 
+  // 총 페이지 수 입력 (page_count가 없는 경우)
+  const [isAddingTotalPages, setIsAddingTotalPages] = useState(false);
+  const [totalPagesInput, setTotalPagesInput] = useState('');
+
   // 독서 완료 모달
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [reviewData, setReviewData] = useState({
@@ -123,6 +127,27 @@ export default function BookDetailPage() {
     },
     onError: (error: any) => {
       const message = error.response?.data?.error?.message || '페이지 업데이트에 실패했습니다';
+      showToast(message, 'error');
+    },
+  });
+
+  // 총 페이지 수 업데이트
+  const updateTotalPagesMutation = useMutation({
+    mutationFn: async (totalPages: number) => {
+      const response = await api.patch(`/api/v1/reading-books/${readingBookId}`, {
+        total_pages: totalPages,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
+      queryClient.invalidateQueries({ queryKey: ['reading-books'] });
+      showToast('총 페이지 수가 저장되었습니다', 'success');
+      setIsAddingTotalPages(false);
+      setTotalPagesInput('');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error?.message || '총 페이지 수 저장에 실패했습니다';
       showToast(message, 'error');
     },
   });
@@ -231,6 +256,15 @@ export default function BookDetailPage() {
     }
   };
 
+  const handleSaveTotalPages = () => {
+    const totalPages = parseInt(totalPagesInput);
+    if (isNaN(totalPages) || totalPages <= 0) {
+      showToast('올바른 페이지 수를 입력해주세요', 'warning');
+      return;
+    }
+    updateTotalPagesMutation.mutate(totalPages);
+  };
+
   const handleComplete = () => {
     if (reviewData.rating < 1 || reviewData.rating > 5) {
       showToast('평점은 1-5 사이여야 합니다', 'warning');
@@ -244,6 +278,8 @@ export default function BookDetailPage() {
   const records: ReadingRecord[] = recordsData?.data?.items || [];
   const review: Review | undefined = reviewQueryData?.data?.items?.[0];
 
+  // 총 페이지 수: book.page_count 또는 reading_books.total_pages
+  const totalPages = readingBook?.book?.page_count || readingBook?.total_pages;
   const progress = readingBook?.progress_percent || 0;
 
   // readingBook이 로드되면 currentPageInput 초기화
@@ -302,86 +338,146 @@ export default function BookDetailPage() {
               )}
 
               {/* 페이지 트래커 (감성적 슬라이더) */}
-              {readingBook.status === 'reading' && readingBook.book.page_count && (
+              {readingBook.status === 'reading' && (
                 <div className="mt-6">
-                  {/* 헤더 */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">📖</span>
-                      <span className="text-sm font-semibold text-text-primary">독서 진행 상황</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold bg-gradient-to-r from-ios-green to-ios-green-light bg-clip-text text-transparent">
-                        {Math.round(progress)}%
-                      </span>
-                    </div>
-                  </div>
+                  {totalPages ? (
+                    <>
+                      {/* 헤더 */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">📖</span>
+                          <span className="text-sm font-semibold text-text-primary">독서 진행 상황</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-bold bg-gradient-to-r from-ios-green to-ios-green-light bg-clip-text text-transparent">
+                            {Math.round(progress)}%
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* 현재 페이지 표시 */}
-                  <div className="bg-gradient-to-r from-ios-green/10 to-ios-green-light/10 rounded-2xl p-4 mb-3">
-                    <div className="flex items-center justify-center gap-3">
-                      <span className="text-3xl font-bold text-ios-green">{currentPageInput}</span>
-                      <span className="text-text-secondary">/</span>
-                      <span className="text-2xl font-semibold text-text-secondary">
-                        {readingBook.book.page_count}
-                      </span>
-                      <span className="text-sm text-text-secondary">페이지</span>
+                      {/* 현재 페이지 표시 */}
+                      <div className="bg-gradient-to-r from-ios-green/10 to-ios-green-light/10 rounded-2xl p-4 mb-3">
+                        <div className="flex items-center justify-center gap-3">
+                          <span className="text-3xl font-bold text-ios-green">{currentPageInput}</span>
+                          <span className="text-text-secondary">/</span>
+                          <span className="text-2xl font-semibold text-text-secondary">
+                            {totalPages}
+                          </span>
+                          <span className="text-sm text-text-secondary">페이지</span>
+                        </div>
+                      </div>
+
+                      {/* 슬라이더 */}
+                      <div className="relative px-2">
+                        <input
+                          type="range"
+                          min="0"
+                          max={totalPages}
+                          value={currentPageInput}
+                          onChange={(e) => handleSliderChange(parseInt(e.target.value))}
+                          onMouseUp={handleSliderCommit}
+                          onTouchEnd={handleSliderCommit}
+                          className="w-full h-3 bg-gradient-to-r from-gray-200 via-ios-green/30 to-ios-green-light/30 rounded-full appearance-none cursor-pointer
+                            [&::-webkit-slider-thumb]:appearance-none
+                            [&::-webkit-slider-thumb]:w-6
+                            [&::-webkit-slider-thumb]:h-6
+                            [&::-webkit-slider-thumb]:rounded-full
+                            [&::-webkit-slider-thumb]:bg-gradient-to-br
+                            [&::-webkit-slider-thumb]:from-ios-green
+                            [&::-webkit-slider-thumb]:to-ios-green-dark
+                            [&::-webkit-slider-thumb]:shadow-lg
+                            [&::-webkit-slider-thumb]:shadow-ios-green/30
+                            [&::-webkit-slider-thumb]:cursor-grab
+                            [&::-webkit-slider-thumb]:active:cursor-grabbing
+                            [&::-webkit-slider-thumb]:hover:scale-110
+                            [&::-webkit-slider-thumb]:transition-transform
+                            [&::-moz-range-thumb]:w-6
+                            [&::-moz-range-thumb]:h-6
+                            [&::-moz-range-thumb]:rounded-full
+                            [&::-moz-range-thumb]:bg-gradient-to-br
+                            [&::-moz-range-thumb]:from-ios-green
+                            [&::-moz-range-thumb]:to-ios-green-dark
+                            [&::-moz-range-thumb]:border-0
+                            [&::-moz-range-thumb]:shadow-lg
+                            [&::-moz-range-thumb]:shadow-ios-green/30
+                            [&::-moz-range-thumb]:cursor-grab
+                            [&::-moz-range-thumb]:active:cursor-grabbing
+                            [&::-moz-range-thumb]:hover:scale-110
+                            [&::-moz-range-thumb]:transition-transform"
+                          style={{
+                            background: `linear-gradient(to right,
+                              rgb(52, 211, 153) 0%,
+                              rgb(52, 211, 153) ${progress}%,
+                              rgb(229, 231, 235) ${progress}%,
+                              rgb(229, 231, 235) 100%)`
+                          }}
+                        />
+                      </div>
+
+                      {/* 메시지 */}
+                      <div className="mt-3 text-center">
+                        <p className="text-xs text-text-secondary italic">
+                          슬라이더를 움직여 현재 읽고 있는 페이지를 기록하세요 ✨
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    // 총 페이지 수 입력 UI
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+                      <div className="text-center mb-4">
+                        <span className="text-3xl mb-2 inline-block">📚</span>
+                        <h3 className="text-lg font-semibold text-text-primary mb-1">
+                          이 책의 총 페이지 수를 알려주세요
+                        </h3>
+                        <p className="text-sm text-text-secondary">
+                          페이지 수를 입력하면 독서 진행 상황을 추적할 수 있어요
+                        </p>
+                      </div>
+
+                      {isAddingTotalPages ? (
+                        <div className="space-y-3">
+                          <input
+                            type="number"
+                            value={totalPagesInput}
+                            onChange={(e) => setTotalPagesInput(e.target.value)}
+                            placeholder="예: 384"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent text-center text-lg font-semibold"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setIsAddingTotalPages(false);
+                                setTotalPagesInput('');
+                              }}
+                              className="flex-1"
+                              size="sm"
+                            >
+                              취소
+                            </Button>
+                            <Button
+                              onClick={handleSaveTotalPages}
+                              className="flex-1"
+                              size="sm"
+                              isLoading={updateTotalPagesMutation.isPending}
+                            >
+                              저장
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => setIsAddingTotalPages(true)}
+                          variant="primary"
+                          className="w-full"
+                          size="sm"
+                        >
+                          📝 총 페이지 수 입력하기
+                        </Button>
+                      )}
                     </div>
-                  </div>
-
-                  {/* 슬라이더 */}
-                  <div className="relative px-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max={readingBook.book.page_count}
-                      value={currentPageInput}
-                      onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-                      onMouseUp={handleSliderCommit}
-                      onTouchEnd={handleSliderCommit}
-                      className="w-full h-3 bg-gradient-to-r from-gray-200 via-ios-green/30 to-ios-green-light/30 rounded-full appearance-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none
-                        [&::-webkit-slider-thumb]:w-6
-                        [&::-webkit-slider-thumb]:h-6
-                        [&::-webkit-slider-thumb]:rounded-full
-                        [&::-webkit-slider-thumb]:bg-gradient-to-br
-                        [&::-webkit-slider-thumb]:from-ios-green
-                        [&::-webkit-slider-thumb]:to-ios-green-dark
-                        [&::-webkit-slider-thumb]:shadow-lg
-                        [&::-webkit-slider-thumb]:shadow-ios-green/30
-                        [&::-webkit-slider-thumb]:cursor-grab
-                        [&::-webkit-slider-thumb]:active:cursor-grabbing
-                        [&::-webkit-slider-thumb]:hover:scale-110
-                        [&::-webkit-slider-thumb]:transition-transform
-                        [&::-moz-range-thumb]:w-6
-                        [&::-moz-range-thumb]:h-6
-                        [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-gradient-to-br
-                        [&::-moz-range-thumb]:from-ios-green
-                        [&::-moz-range-thumb]:to-ios-green-dark
-                        [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:shadow-lg
-                        [&::-moz-range-thumb]:shadow-ios-green/30
-                        [&::-moz-range-thumb]:cursor-grab
-                        [&::-moz-range-thumb]:active:cursor-grabbing
-                        [&::-moz-range-thumb]:hover:scale-110
-                        [&::-moz-range-thumb]:transition-transform"
-                      style={{
-                        background: `linear-gradient(to right,
-                          rgb(52, 211, 153) 0%,
-                          rgb(52, 211, 153) ${progress}%,
-                          rgb(229, 231, 235) ${progress}%,
-                          rgb(229, 231, 235) 100%)`
-                      }}
-                    />
-                  </div>
-
-                  {/* 메시지 */}
-                  <div className="mt-3 text-center">
-                    <p className="text-xs text-text-secondary italic">
-                      슬라이더를 움직여 현재 읽고 있는 페이지를 기록하세요 ✨
-                    </p>
-                  </div>
+                  )}
                 </div>
               )}
 
