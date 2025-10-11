@@ -10,6 +10,7 @@ interface Book {
   publisher?: string;
   coverImage?: string;
   isbn?: string;
+  isbn13?: string;
   pageCount?: number;
 }
 
