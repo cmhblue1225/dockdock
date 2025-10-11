@@ -1,6 +1,6 @@
 # 🚀 독독 (DockDock) 배포 가이드
 
-Render.com을 사용한 독독 프로젝트 배포 가이드입니다.
+Netlify(프론트엔드) + Render(백엔드)를 사용한 독독 프로젝트 배포 가이드입니다.
 
 ---
 
@@ -32,56 +32,85 @@ ALADIN_API_KEY=your_aladin_api_key
 
 ---
 
-## 🌐 Render.com 배포 (추천)
+## 🌐 배포 아키텍처
 
-### Option 1: Blueprint로 한 번에 배포 (추천)
-
-#### 1. Render.com 계정 생성
-- https://dashboard.render.com/ 접속
-- GitHub으로 로그인
-
-#### 2. Blueprint로 배포
 ```
-1. Dashboard → "New" → "Blueprint"
-2. GitHub 저장소 연결: cmhblue1225/dockdock
-3. Blueprint 파일: render.yaml (자동 감지됨)
-4. "Apply" 클릭
-```
-
-#### 3. 환경 변수 설정
-
-**백엔드 서비스 (dockdock-api):**
-```
-SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (Settings → Service Role Key)
-ALADIN_API_KEY=your_aladin_api_key
-FRONTEND_URL=https://dockdock-web.onrender.com (프론트엔드 URL로 교체)
-```
-
-**프론트엔드 서비스 (dockdock-web):**
-```
-VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-VITE_API_BASE_URL=https://dockdock-api.onrender.com (백엔드 URL로 교체)
-```
-
-#### 4. 배포 완료 확인
-```
-✅ 백엔드: https://dockdock-api.onrender.com
-   - Health Check: https://dockdock-api.onrender.com/health
-   - Swagger: https://dockdock-api.onrender.com/api-docs
-
-✅ 프론트엔드: https://dockdock-web.onrender.com
+┌─────────────────┐
+│  Netlify        │  ← 프론트엔드 (React)
+│  Static Site    │     https://dockdock.netlify.app
+└────────┬────────┘
+         │ API 요청
+         ↓
+┌─────────────────┐
+│  Render         │  ← 백엔드 (Express API)
+│  Web Service    │     https://dockdock-api.onrender.com
+└─────────────────┘
 ```
 
 ---
 
-### Option 2: 수동으로 개별 배포
+## 🎨 프론트엔드 배포 (Netlify)
 
-Blueprint 대신 수동으로 배포하려면:
+### 1. Netlify 계정 생성
+- https://app.netlify.com/ 접속
+- GitHub으로 로그인
 
-#### 백엔드 배포
+### 2. 새 사이트 생성
+```
+1. Dashboard → "Add new site" → "Import an existing project"
+2. GitHub 연결 → 저장소 선택: cmhblue1225/dockdock
+3. 배포 설정:
+   - Base directory: frontend
+   - Build command: npm run build
+   - Publish directory: frontend/dist
+4. "Deploy site" 클릭
+```
+
+### 3. 환경 변수 설정
+```
+1. Site settings → Environment variables
+2. 다음 변수들 추가:
+```
+
+**필수 환경 변수:**
+```
+VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_API_BASE_URL=https://dockdock-api.onrender.com
+```
+
+### 4. 도메인 설정 (선택)
+```
+1. Site settings → Domain management
+2. Custom domain 설정 또는 Netlify 서브도메인 사용
+   예: dockdock.netlify.app
+```
+
+### 5. 재배포
+환경 변수 추가 후 재배포:
+```
+Deploys → Trigger deploy → Deploy site
+```
+
+---
+
+## 🔌 백엔드 배포 (Render)
+
+### 1. Render 계정 생성
+- https://dashboard.render.com/ 접속
+- GitHub으로 로그인
+
+### 2. 백엔드 서비스 생성
+
+#### Option A: Blueprint 사용 (추천)
+```
+1. Dashboard → "New" → "Blueprint"
+2. GitHub 저장소 연결: cmhblue1225/dockdock
+3. render.yaml 자동 감지
+4. "Apply" 클릭
+```
+
+#### Option B: 수동 생성
 ```
 1. Dashboard → "New" → "Web Service"
 2. GitHub 저장소 연결
@@ -94,44 +123,52 @@ Blueprint 대신 수동으로 배포하려면:
    - Build Command: npm install && npm run build
    - Start Command: npm start
    - Instance Type: Free
-4. 환경 변수 추가 (위 참고)
-5. "Create Web Service"
 ```
 
-#### 프론트엔드 배포
+### 3. 환경 변수 설정
 ```
-1. Dashboard → "New" → "Static Site"
-2. GitHub 저장소 연결
-3. 설정:
-   - Name: dockdock-web
-   - Region: Singapore
-   - Branch: main
-   - Root Directory: frontend
-   - Build Command: npm install && npm run build
-   - Publish Directory: dist
-4. 환경 변수 추가 (위 참고)
-5. "Create Static Site"
+Dashboard → dockdock-api → Environment
 ```
+
+**필수 환경 변수:**
+```
+NODE_ENV=production
+PORT=10000
+SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ALADIN_API_KEY=ttb...
+FRONTEND_URL=https://dockdock.netlify.app
+```
+
+⚠️ `FRONTEND_URL`은 Netlify 배포 후 실제 URL로 업데이트하세요!
 
 ---
 
 ## 🔧 배포 후 설정
 
-### 1. Supabase CORS 설정
+### 1. 프론트엔드 환경 변수 업데이트
+
+Netlify에서 백엔드 URL 업데이트:
+```
+Site settings → Environment variables → VITE_API_BASE_URL 편집
+VITE_API_BASE_URL=https://dockdock-api.onrender.com
+```
+
+### 2. Supabase CORS 설정
 
 Supabase Dashboard에서 허용된 도메인 추가:
 ```
 1. Project Settings → API → Configuration
-2. Site URL: https://dockdock-web.onrender.com
+2. Site URL: https://dockdock.netlify.app
 3. Additional Redirect URLs:
-   - https://dockdock-web.onrender.com/auth/callback
+   - https://dockdock.netlify.app/auth/callback
 ```
 
-### 2. CORS 확인
+### 3. 백엔드 CORS 확인
 
-백엔드의 CORS 설정이 프론트엔드 URL을 허용하는지 확인:
-```javascript
-// backend/src/index.ts
+`backend/src/index.ts`의 CORS 설정이 Netlify URL을 허용하는지 확인:
+```typescript
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -139,21 +176,7 @@ const corsOptions = {
 };
 ```
 
-### 3. 환경 변수 업데이트
-
-배포 후 실제 URL로 환경 변수 업데이트:
-
-**백엔드 (dockdock-api):**
-```
-FRONTEND_URL=https://dockdock-web.onrender.com
-```
-
-**프론트엔드 (dockdock-web):**
-```
-VITE_API_BASE_URL=https://dockdock-api.onrender.com
-```
-
-> ⚠️ 환경 변수를 변경하면 서비스가 자동으로 재배포됩니다.
+Render 환경 변수에서 `FRONTEND_URL`이 Netlify URL로 설정되어 있어야 합니다.
 
 ---
 
@@ -195,55 +218,78 @@ Authorization: Bearer {access_token}
 
 ## 🐛 트러블슈팅
 
-### Free Tier 제한사항
-
-Render.com Free Tier는 다음 제한이 있습니다:
-- **15분 동안 요청이 없으면 서버가 Sleep 모드로 전환**
-- 첫 요청 시 Cold Start로 30초~1분 소요
-- 월 750시간 무료 (1개 서비스 24/7 운영 가능)
-
-**해결책:**
-- 프로덕션 환경에서는 Paid Plan ($7/month) 사용 권장
-- 또는 주기적으로 Health Check 요청 (UptimeRobot 등)
-
-### 빌드 실패 시
+### Netlify 빌드 실패
 
 **에러: 환경 변수 누락**
 ```
-해결: Render Dashboard → Service → Environment에서 모든 환경 변수 확인
+해결: Site settings → Environment variables에서 모든 VITE_ 변수 확인
 ```
+
+**에러: 404 on reload**
+```
+해결: netlify.toml에 리다이렉트 규칙이 있는지 확인
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+### Render 백엔드 문제
 
 **에러: CORS 오류**
 ```
-해결: 백엔드 FRONTEND_URL 환경 변수를 프론트엔드 URL로 설정
+해결: Render 환경 변수 FRONTEND_URL을 Netlify URL로 설정
 ```
 
-**에러: Supabase 연결 실패**
+**에러: Cold Start (첫 요청 느림)**
+```
+원인: Render Free Tier는 15분 동안 요청이 없으면 Sleep
+해결:
+  1. Paid Plan 사용 ($7/month)
+  2. UptimeRobot으로 주기적 Health Check
+```
+
+### Supabase 연결 실패
 ```
 해결: SUPABASE_URL과 키들이 정확한지 확인
 ```
 
 ### 로그 확인
 ```
-Render Dashboard → 서비스 선택 → "Logs" 탭
+Netlify: Site → Deploys → 배포 선택 → Deploy log
+Render: Dashboard → 서비스 선택 → Logs 탭
 ```
 
 ---
 
 ## 🔄 재배포
 
-코드 변경 후 재배포:
+### 프론트엔드 (Netlify)
 ```bash
+# 코드 변경 후
 git add .
-git commit -m "변경 사항 설명"
+git commit -m "변경 사항"
 git push origin main
+# Netlify가 자동으로 감지하고 재배포
 ```
-
-Render가 자동으로 감지하고 재배포합니다.
 
 수동 재배포:
 ```
-Render Dashboard → 서비스 선택 → "Manual Deploy" → "Deploy latest commit"
+Netlify Dashboard → Deploys → Trigger deploy
+```
+
+### 백엔드 (Render)
+```bash
+# 코드 변경 후
+git add .
+git commit -m "변경 사항"
+git push origin main
+# Render가 자동으로 감지하고 재배포
+```
+
+수동 재배포:
+```
+Render Dashboard → Manual Deploy → Deploy latest commit
 ```
 
 ---
@@ -281,44 +327,69 @@ curl -X POST https://dockdock-api.onrender.com/api/auth/login \
 
 ## 📝 환경 변수 전체 목록
 
-### 백엔드 (dockdock-api)
-| 변수명 | 필수 | 설명 | 예시 |
-|--------|------|------|------|
-| NODE_ENV | ✅ | 환경 (자동 설정) | production |
-| PORT | ✅ | 포트 (자동 설정) | 10000 |
-| SUPABASE_URL | ✅ | Supabase 프로젝트 URL | https://xxx.supabase.co |
-| SUPABASE_ANON_KEY | ✅ | Supabase Anon Key | eyJhbGc... |
-| SUPABASE_SERVICE_KEY | ✅ | Supabase Service Role Key | eyJhbGc... |
-| ALADIN_API_KEY | ✅ | 알라딘 API Key | ttb... |
-| FRONTEND_URL | ✅ | 프론트엔드 URL (CORS) | https://dockdock-web.onrender.com |
-
-### 프론트엔드 (dockdock-web)
+### 프론트엔드 (Netlify)
 | 변수명 | 필수 | 설명 | 예시 |
 |--------|------|------|------|
 | VITE_SUPABASE_URL | ✅ | Supabase 프로젝트 URL | https://xxx.supabase.co |
 | VITE_SUPABASE_ANON_KEY | ✅ | Supabase Anon Key | eyJhbGc... |
 | VITE_API_BASE_URL | ✅ | 백엔드 API URL | https://dockdock-api.onrender.com |
 
+### 백엔드 (Render)
+| 변수명 | 필수 | 설명 | 예시 |
+|--------|------|------|------|
+| NODE_ENV | ✅ | 환경 | production |
+| PORT | ✅ | 포트 (자동) | 10000 |
+| SUPABASE_URL | ✅ | Supabase 프로젝트 URL | https://xxx.supabase.co |
+| SUPABASE_ANON_KEY | ✅ | Supabase Anon Key | eyJhbGc... |
+| SUPABASE_SERVICE_KEY | ✅ | Supabase Service Role Key | eyJhbGc... |
+| ALADIN_API_KEY | ✅ | 알라딘 API Key | ttb... |
+| FRONTEND_URL | ✅ | 프론트엔드 URL (CORS) | https://dockdock.netlify.app |
+
 ---
 
 ## ✅ 배포 체크리스트
 
 - [ ] GitHub에 코드 푸시 완료
-- [ ] Supabase 환경 변수 확인
-- [ ] Aladin API Key 확인
-- [ ] Render.com Blueprint 배포
-- [ ] 백엔드 환경 변수 설정
-- [ ] 프론트엔드 환경 변수 설정
-- [ ] 백엔드 Health Check 확인
-- [ ] 프론트엔드 접속 확인
+- [ ] Netlify 사이트 생성
+- [ ] Netlify 환경 변수 설정
+- [ ] Netlify 배포 성공
+- [ ] Render 백엔드 생성
+- [ ] Render 환경 변수 설정
+- [ ] Render 배포 성공
+- [ ] 프론트엔드에서 백엔드 URL 업데이트
+- [ ] 백엔드에서 프론트엔드 URL 업데이트
+- [ ] Supabase CORS 설정
+- [ ] Health Check API 확인
 - [ ] Swagger 문서 확인
 - [ ] 회원가입/로그인 테스트
-- [ ] Supabase CORS 설정
+- [ ] 책 검색 테스트
 - [ ] iOS 개발자에게 API URL 공유
 
 ---
 
-**배포 완료 후 URL:**
-- 🌐 프론트엔드: https://dockdock-web.onrender.com
-- 🔌 백엔드 API: https://dockdock-api.onrender.com
+## 🎯 배포 완료 후 URL
+
+**프론트엔드:**
+- 🌐 웹사이트: https://dockdock.netlify.app
+
+**백엔드:**
+- 🔌 API: https://dockdock-api.onrender.com
 - 📚 API 문서: https://dockdock-api.onrender.com/api-docs
+- ❤️ Health Check: https://dockdock-api.onrender.com/health
+
+---
+
+## 💰 비용
+
+### Netlify
+- **Free Tier**: 100GB 대역폭/월, 300 빌드 분/월
+- 무료로 충분히 사용 가능
+
+### Render
+- **Free Tier**: 750시간/월 (1개 서비스 24/7 운영 가능)
+- ⚠️ 15분 동안 요청이 없으면 Sleep (Cold Start)
+- **Starter Plan**: $7/월 (Sleep 없음, 추천)
+
+---
+
+**배포 완료! 🎉**

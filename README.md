@@ -46,9 +46,10 @@
 - **Auth**: Supabase Client
 
 ### DevOps
-- **Hosting**: Render.com
+- **Frontend Hosting**: Netlify
+- **Backend Hosting**: Render.com
 - **Version Control**: Git, GitHub
-- **CI/CD**: Render Auto Deploy
+- **CI/CD**: Auto Deploy (Git Push)
 
 ---
 
@@ -78,7 +79,8 @@ dockdock/
 ├── shared/               # 공유 타입 정의
 │   └── types/
 │
-├── render.yaml           # Render 배포 설정
+├── netlify.toml          # Netlify 배포 설정 (프론트엔드)
+├── render.yaml           # Render 배포 설정 (백엔드)
 ├── DEPLOYMENT.md         # 배포 가이드
 └── README.md            # 이 파일
 ```
@@ -248,9 +250,14 @@ request.addValue("Bearer \(accessToken)",
 
 ## 🌐 배포
 
-### Render.com 배포
+### Netlify (프론트엔드) + Render (백엔드)
 
-자세한 배포 가이드는 [DEPLOYMENT.md](./DEPLOYMENT.md) 참고
+자세한 배포 가이드는 [DEPLOYMENT.md](./DEPLOYMENT.md) 또는 [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md) 참고
+
+**배포 아키텍처:**
+```
+Netlify (프론트엔드) → Render (백엔드 API)
+```
 
 **간단 배포:**
 ```bash
@@ -259,12 +266,15 @@ git add .
 git commit -m "feat: 배포 준비 완료"
 git push origin main
 
-# 2. Render.com에서 Blueprint 배포
-# Dashboard → New → Blueprint → 저장소 선택
+# 2. Netlify에서 프론트엔드 배포
+# https://app.netlify.com/ → Import from Git
+
+# 3. Render에서 백엔드 배포
+# https://dashboard.render.com/ → Blueprint
 ```
 
 **배포 후 URL:**
-- 프론트엔드: https://dockdock-web.onrender.com
+- 프론트엔드: https://dockdock.netlify.app
 - 백엔드 API: https://dockdock-api.onrender.com
 - API 문서: https://dockdock-api.onrender.com/api-docs
 

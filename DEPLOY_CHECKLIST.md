@@ -1,6 +1,6 @@
 # ✅ 배포 체크리스트
 
-Render.com에 독독 프로젝트를 배포하기 전 확인해야 할 사항들입니다.
+Netlify(프론트엔드) + Render(백엔드)에 독독 프로젝트를 배포하기 전 확인해야 할 사항들입니다.
 
 ---
 
@@ -63,7 +63,6 @@ npm run dev
 ### Aladin API 키 확인
 ```
 /Users/dev/독독/dockdock/backend/.env 파일에서 확인
-또는 /Users/dev/독독/apis/.env 파일에서 확인
 ```
 
 - [ ] ALADIN_API_KEY 준비됨
@@ -71,20 +70,20 @@ npm run dev
 ### 환경 변수 목록 작성
 다음 값들을 메모장에 정리:
 
-**백엔드 (dockdock-api):**
+**프론트엔드 (Netlify):**
+```
+VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGc...
+VITE_API_BASE_URL=https://dockdock-api.onrender.com
+```
+
+**백엔드 (Render):**
 ```
 SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
 SUPABASE_ANON_KEY=eyJhbGc...
 SUPABASE_SERVICE_KEY=eyJhbGc...
 ALADIN_API_KEY=ttb...
-FRONTEND_URL=https://dockdock-web.onrender.com
-```
-
-**프론트엔드 (dockdock-web):**
-```
-VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGc...
-VITE_API_BASE_URL=https://dockdock-api.onrender.com
+FRONTEND_URL=https://dockdock.netlify.app
 ```
 
 ---
@@ -103,7 +102,7 @@ git status
 ### 2. 커밋 및 푸시
 ```bash
 git add .
-git commit -m "feat: 로그인 기능 및 Render 배포 설정 완료"
+git commit -m "feat: Netlify + Render 배포 설정 완료"
 git push -u origin main
 ```
 
@@ -112,7 +111,70 @@ git push -u origin main
 
 ---
 
-## 🌐 Render.com 배포
+## 🎨 Netlify 배포 (프론트엔드)
+
+### 1. Netlify 계정 생성/로그인
+```
+1. https://app.netlify.com/ 접속
+2. GitHub 계정으로 로그인
+```
+
+- [ ] Netlify 계정 생성/로그인 완료
+
+### 2. 새 사이트 생성
+```
+1. Dashboard → "Add new site" → "Import an existing project"
+2. GitHub 연결
+3. 저장소 선택: cmhblue1225/dockdock
+4. 배포 설정:
+   - Base directory: frontend
+   - Build command: npm run build
+   - Publish directory: frontend/dist
+5. "Deploy site" 클릭
+```
+
+- [ ] 사이트 생성 완료
+- [ ] 초기 배포 시작됨
+
+### 3. 프론트엔드 환경 변수 설정
+```
+1. Site settings → Environment variables → "Add a variable"
+2. 다음 변수들 추가:
+```
+
+**추가할 환경 변수:**
+```
+VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
+VITE_SUPABASE_ANON_KEY=your_key_here
+VITE_API_BASE_URL=https://dockdock-api.onrender.com
+```
+
+⚠️ **주의**: Render 백엔드를 먼저 배포하고 실제 URL을 받은 후 `VITE_API_BASE_URL`을 업데이트하세요!
+
+- [ ] 모든 프론트엔드 환경 변수 설정 완료
+- [ ] "Save" 클릭
+
+### 4. 재배포
+```
+Deploys → Trigger deploy → "Deploy site"
+```
+
+- [ ] 재배포 시작
+- [ ] 배포 성공 확인
+- [ ] Netlify URL 확인: `https://[random-name].netlify.app`
+
+### 5. 도메인 설정 (선택)
+```
+Site settings → Domain management → "Edit site name"
+예: dockdock
+최종 URL: https://dockdock.netlify.app
+```
+
+- [ ] 도메인 이름 설정 (선택)
+
+---
+
+## 🔌 Render 배포 (백엔드)
 
 ### 1. Render 계정 생성/로그인
 ```
@@ -122,18 +184,33 @@ git push -u origin main
 
 - [ ] Render 계정 생성/로그인 완료
 
-### 2. Blueprint로 배포
+### 2. 백엔드 서비스 생성
+
+**Option A: Blueprint 사용 (추천)**
 ```
 1. Dashboard → "New" → "Blueprint"
 2. GitHub 저장소 연결: cmhblue1225/dockdock
-3. Blueprint 파일: render.yaml (자동 감지)
+3. render.yaml 자동 감지
 4. "Apply" 클릭
-5. 배포 시작 (5-10분 소요)
 ```
 
-- [ ] Blueprint 배포 시작됨
-- [ ] 백엔드 서비스 (dockdock-api) 생성됨
-- [ ] 프론트엔드 서비스 (dockdock-web) 생성됨
+**Option B: 수동 생성**
+```
+1. Dashboard → "New" → "Web Service"
+2. GitHub 저장소 연결
+3. 설정:
+   - Name: dockdock-api
+   - Region: Singapore
+   - Branch: main
+   - Root Directory: backend
+   - Environment: Node
+   - Build Command: npm install && npm run build
+   - Start Command: npm start
+   - Instance Type: Free
+```
+
+- [ ] 백엔드 서비스 생성 완료
+- [ ] 배포 시작됨
 
 ### 3. 백엔드 환경 변수 설정
 ```
@@ -144,42 +221,51 @@ git push -u origin main
 
 **추가할 환경 변수:**
 ```
+NODE_ENV=production
+PORT=10000
 SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
 SUPABASE_ANON_KEY=your_key_here
 SUPABASE_SERVICE_KEY=your_key_here
 ALADIN_API_KEY=your_key_here
-FRONTEND_URL=https://dockdock-web.onrender.com
+FRONTEND_URL=https://dockdock.netlify.app
 ```
+
+⚠️ **주의**: Netlify 배포 후 실제 URL을 `FRONTEND_URL`에 입력하세요!
 
 - [ ] 모든 백엔드 환경 변수 설정 완료
 - [ ] "Save Changes" 클릭
 - [ ] 자동 재배포 대기
 
-### 4. 프론트엔드 환경 변수 설정
-```
-1. Dashboard → dockdock-web 선택
-2. "Environment" 탭 클릭
-3. 아래 변수들 추가:
-```
-
-**추가할 환경 변수:**
-```
-VITE_SUPABASE_URL=https://xshxbphonupqlhypglfu.supabase.co
-VITE_SUPABASE_ANON_KEY=your_key_here
-VITE_API_BASE_URL=https://dockdock-api.onrender.com
-```
-
-- [ ] 모든 프론트엔드 환경 변수 설정 완료
-- [ ] "Save Changes" 클릭
-- [ ] 자동 재배포 대기
-
-### 5. 배포 URL 확인
+### 4. 배포 URL 확인
 ```
 배포 완료 후 Render Dashboard에서 URL 확인:
 ```
 
 - [ ] 백엔드 URL: `https://dockdock-api.onrender.com`
-- [ ] 프론트엔드 URL: `https://dockdock-web.onrender.com`
+
+---
+
+## 🔄 상호 URL 업데이트
+
+### 1. Netlify 환경 변수 업데이트
+```
+Render 백엔드 URL을 받은 후:
+Site settings → Environment variables → VITE_API_BASE_URL 편집
+VITE_API_BASE_URL=https://dockdock-api.onrender.com
+```
+
+- [ ] Netlify `VITE_API_BASE_URL` 업데이트
+- [ ] 재배포
+
+### 2. Render 환경 변수 업데이트
+```
+Netlify URL을 받은 후:
+Dashboard → Environment → FRONTEND_URL 편집
+FRONTEND_URL=https://dockdock.netlify.app
+```
+
+- [ ] Render `FRONTEND_URL` 업데이트
+- [ ] 재배포 대기
 
 ---
 
@@ -200,7 +286,7 @@ curl https://dockdock-api.onrender.com/health
 
 ### 2. 프론트엔드 테스트
 ```
-브라우저에서 접속: https://dockdock-web.onrender.com
+브라우저에서 접속: https://dockdock.netlify.app
 ```
 
 - [ ] 프론트엔드 정상 로드
@@ -237,20 +323,14 @@ curl "https://dockdock-api.onrender.com/api/books/search?query=클린코드&maxR
 ### 1. Supabase CORS 설정
 ```
 1. Supabase Dashboard → Project Settings → API
-2. Site URL 설정: https://dockdock-web.onrender.com
+2. Site URL 설정: https://dockdock.netlify.app
 3. Additional Redirect URLs 추가:
-   - https://dockdock-web.onrender.com/auth/callback
+   - https://dockdock.netlify.app/auth/callback
 4. "Save" 클릭
 ```
 
 - [ ] Supabase Site URL 설정 완료
 - [ ] Redirect URLs 설정 완료
-
-### 2. 환경 변수 최종 확인
-배포된 URL로 환경 변수를 다시 업데이트했는지 확인:
-
-- [ ] 백엔드 `FRONTEND_URL` = `https://dockdock-web.onrender.com`
-- [ ] 프론트엔드 `VITE_API_BASE_URL` = `https://dockdock-api.onrender.com`
 
 ---
 
@@ -294,9 +374,10 @@ Authorization: Bearer {access_token}
 ## 🎯 최종 확인
 
 ### 배포 완료 체크
-- [ ] ✅ 백엔드 배포 성공
-- [ ] ✅ 프론트엔드 배포 성공
+- [ ] ✅ Netlify 프론트엔드 배포 성공
+- [ ] ✅ Render 백엔드 배포 성공
 - [ ] ✅ 모든 환경 변수 설정 완료
+- [ ] ✅ 상호 URL 업데이트 완료
 - [ ] ✅ Supabase CORS 설정 완료
 - [ ] ✅ Health Check API 정상
 - [ ] ✅ Swagger 문서 접근 가능
@@ -306,7 +387,7 @@ Authorization: Bearer {access_token}
 
 ### 배포된 서비스 URL
 ```
-🌐 프론트엔드: https://dockdock-web.onrender.com
+🌐 프론트엔드: https://dockdock.netlify.app
 🔌 백엔드 API: https://dockdock-api.onrender.com
 📚 API 문서: https://dockdock-api.onrender.com/api-docs
 ```
@@ -315,19 +396,25 @@ Authorization: Bearer {access_token}
 
 ## ⚠️ 주의사항
 
+### Netlify Free Tier
+- 100GB 대역폭/월
+- 300 빌드 분/월
+- 무료로 충분히 사용 가능
+
 ### Render Free Tier 제한
 - **15분 동안 요청이 없으면 Sleep 모드**
 - 첫 요청 시 Cold Start (30초~1분 소요)
 - 월 750시간 무료 (1개 서비스 24/7 운영 가능)
 
 ### 프로덕션 권장사항
-- Paid Plan 사용 ($7/month per service)
+- Render Paid Plan 사용 ($7/month)
 - 또는 UptimeRobot으로 주기적 Health Check
 
 ### 문제 발생 시
-1. Render Dashboard → 서비스 선택 → "Logs" 탭에서 로그 확인
-2. 환경 변수 재확인
-3. 수동 재배포: "Manual Deploy" → "Deploy latest commit"
+1. Netlify: Site → Deploys → 로그 확인
+2. Render: Dashboard → 서비스 → "Logs" 탭 확인
+3. 환경 변수 재확인
+4. 수동 재배포
 
 ---
 

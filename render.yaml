@@ -1,5 +1,6 @@
 services:
-  # 백엔드 API 서버
+  # 백엔드 API 서버 (Render)
+  # 프론트엔드는 Netlify에 배포됨
   - type: web
     name: dockdock-api
     env: node
@@ -23,23 +24,3 @@ services:
       - key: FRONTEND_URL
         sync: false
     healthCheckPath: /health
-
-  # 프론트엔드 정적 사이트
-  - type: web
-    name: dockdock-web
-    env: static
-    region: singapore
-    plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
-      - key: VITE_API_BASE_URL
-        sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
