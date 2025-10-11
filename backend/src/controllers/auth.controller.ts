@@ -149,7 +149,7 @@ export const authController = {
    * POST /api/auth/logout
    * Authorization: Bearer {token}
    */
-  signOut: async (req: Request, res: Response) => {
+  signOut: async (_req: Request, res: Response) => {
     try {
       const supabase = getSupabaseClient();
       const { error } = await supabase.auth.signOut();
