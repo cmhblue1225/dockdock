@@ -62,17 +62,23 @@ export default function OnboardingPage() {
 
     setError('');
     setLoadingBooks(true);
-    setStep('books');
 
     // 선택한 장르의 책들 로드
     try {
       const booksMap = new Map<string, OnboardingBook[]>();
       for (const genreId of Array.from(selectedGenres)) {
+        console.log(`[Frontend] ${genreId} 장르의 책을 요청합니다...`);
         const books = await getGenreBooks(genreId, 5);
+        console.log(`[Frontend] ${genreId} 장르의 책 ${books.length}권을 받았습니다`);
         booksMap.set(genreId, books);
       }
       setGenreBooks(booksMap);
+      console.log(`[Frontend] 총 ${booksMap.size}개 장르의 책을 로드했습니다`);
+
+      // API 호출이 성공적으로 완료된 후에 books 페이지로 전환
+      setStep('books');
     } catch (err: any) {
+      console.error('[Frontend] 책 로딩 실패:', err);
       setError(err.message || '책 목록을 불러오는데 실패했습니다');
     } finally {
       setLoadingBooks(false);
@@ -152,6 +158,11 @@ export default function OnboardingPage() {
             <div className="text-center text-white">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
               <p className="mt-4">장르를 불러오는 중...</p>
+            </div>
+          ) : loadingBooks ? (
+            <div className="text-center text-white">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+              <p className="mt-4">선택하신 장르의 책을 불러오는 중...</p>
             </div>
           ) : (
             <div className="bg-surface rounded-3xl p-8 shadow-custom-xl">

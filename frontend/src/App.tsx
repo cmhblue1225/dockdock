@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
-import OnboardingPage from './pages/OnboardingPage';
+import OnboardingPagePremium from './pages/OnboardingPagePremium';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
@@ -55,7 +55,7 @@ function App() {
             path="/onboarding"
             element={
               <ProtectedRoute>
-                <OnboardingPage />
+                <OnboardingPagePremium />
               </ProtectedRoute>
             }
           />

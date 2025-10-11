@@ -52,7 +52,7 @@ export async function getGenreBooks(req: Request, res: Response) {
 }
 
 /**
- * 사용자 선호도 저장
+ * 사용자 선호도 저장 (확장)
  * POST /api/v1/onboarding/preferences
  */
 export async function saveUserPreferences(req: Request, res: Response) {
@@ -75,10 +75,23 @@ export async function saveUserPreferences(req: Request, res: Response) {
       );
     }
 
+    // 확장된 선호도 데이터 추출
+    const extendedPreferences = {
+      reading_purposes: dto.reading_purposes,
+      preferred_length: dto.preferred_length,
+      reading_pace: dto.reading_pace,
+      preferred_difficulty: dto.preferred_difficulty,
+      preferred_moods: dto.preferred_moods,
+      preferred_emotions: dto.preferred_emotions,
+      narrative_styles: dto.narrative_styles,
+      preferred_themes: dto.preferred_themes,
+    };
+
     await onboardingService.saveUserPreferences(
       userId,
       dto.preferred_genres,
-      dto.selected_book_ids
+      dto.selected_book_ids,
+      extendedPreferences
     );
 
     return sendSuccess(res, null, '선호도가 성공적으로 저장되었습니다', 201);

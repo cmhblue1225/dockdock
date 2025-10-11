@@ -104,7 +104,7 @@ export async function getPersonalizedRecommendations(
 
     const ratingMap = new Map(reviews?.map((r) => [r.book_id, r.rating]) || []);
 
-    // OpenAI로 추천 생성
+    // OpenAI로 추천 생성 (확장된 선호도 활용)
     const openAI = getOpenAIService();
     const aiRecommendations = await openAI.generatePersonalizedRecommendations(
       preference.preferred_genres || [],
@@ -117,7 +117,18 @@ export async function getPersonalizedRecommendations(
         title: wb.book.title,
         author: wb.book.author,
       })) || [],
-      limit
+      limit,
+      // 확장된 선호도 전달
+      {
+        reading_purposes: preference.reading_purposes || [],
+        preferred_length: preference.preferred_length,
+        reading_pace: preference.reading_pace,
+        preferred_difficulty: preference.preferred_difficulty,
+        preferred_moods: preference.preferred_moods || [],
+        preferred_emotions: preference.preferred_emotions || [],
+        narrative_styles: preference.narrative_styles || [],
+        preferred_themes: preference.preferred_themes || [],
+      }
     );
 
     // 알라딘 API로 실제 책 검색 및 저장
