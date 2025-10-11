@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import AppleLogo from '../components/icons/AppleLogo';
-import KakaoLogo from '../components/icons/KakaoLogo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -152,16 +151,19 @@ export default function LoginPage() {
               <span className="text-base">Apple로 로그인</span>
             </button>
 
-            {/* Kakao 로그인 */}
+            {/* Kakao 로그인 - 공식 리소스 사용 */}
             <button
               type="button"
               onClick={handleKakaoLogin}
               disabled={socialLoading}
-              className="w-full bg-[#FEE500] text-[#000000] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-3 hover:bg-[#FDD835] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full overflow-hidden rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ minHeight: '44px' }}
             >
-              <KakaoLogo className="w-5 h-5" />
-              <span className="text-base">Kakao로 로그인</span>
+              <img
+                src="/images/kakao/kakao_login_medium_wide.png"
+                alt="카카오 로그인"
+                className="w-full h-auto"
+              />
             </button>
           </div>
         </div>
