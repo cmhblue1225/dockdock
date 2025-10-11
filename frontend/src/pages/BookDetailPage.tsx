@@ -112,25 +112,6 @@ export default function BookDetailPage() {
     enabled: !!readingBookId,
   });
 
-  // 현재 페이지 업데이트
-  const updatePageMutation = useMutation({
-    mutationFn: async (currentPage: number) => {
-      const response = await api.patch(`/api/v1/reading-books/${readingBookId}`, {
-        current_page: currentPage,
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
-      queryClient.invalidateQueries({ queryKey: ['reading-books'] });
-      showToast('현재 페이지가 업데이트되었습니다', 'success');
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.error?.message || '페이지 업데이트에 실패했습니다';
-      showToast(message, 'error');
-    },
-  });
-
   // 총 페이지 수 업데이트
   const updateTotalPagesMutation = useMutation({
     mutationFn: async (totalPages: number) => {
@@ -251,8 +232,23 @@ export default function BookDetailPage() {
   };
 
   const handleSliderCommit = () => {
-    if (currentPageInput !== readingBook?.current_page) {
-      updatePageMutation.mutate(currentPageInput);
+    if (currentPageInput !== readingBook?.current_page && readingBook) {
+      // total_pages가 없는데 book.page_count가 있으면 함께 업데이트
+      const updateData: any = { current_page: currentPageInput };
+      if (!readingBook.total_pages && readingBook.book?.page_count) {
+        updateData.total_pages = readingBook.book.page_count;
+      }
+
+      api.patch(`/api/v1/reading-books/${readingBookId}`, updateData)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
+          queryClient.invalidateQueries({ queryKey: ['reading-books'] });
+          showToast('현재 페이지가 업데이트되었습니다', 'success');
+        })
+        .catch((error: any) => {
+          const message = error.response?.data?.error?.message || '페이지 업데이트에 실패했습니다';
+          showToast(message, 'error');
+        });
     }
   };
 
