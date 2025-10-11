@@ -10,7 +10,6 @@ import {
   itemVariants,
   buttonVariants,
   checkmarkVariants,
-  progressBarVariants,
 } from '../lib/animations';
 import {
   READING_PURPOSES,
@@ -234,9 +233,9 @@ export default function OnboardingPagePremium() {
         preferred_genres: Array.from(selectedGenres),
         selected_book_ids: Array.from(selectedBooks),
         reading_purposes: Array.from(readingPurposes),
-        preferred_length: preferredLength || undefined,
-        reading_pace: readingPace || undefined,
-        preferred_difficulty: preferredDifficulty || undefined,
+        preferred_length: (preferredLength || undefined) as 'short' | 'medium' | 'long' | 'any' | undefined,
+        reading_pace: (readingPace || undefined) as 'fast' | 'medium' | 'slow' | undefined,
+        preferred_difficulty: (preferredDifficulty || undefined) as 'easy' | 'moderate' | 'challenging' | 'any' | undefined,
         preferred_moods: Array.from(preferredMoods),
         preferred_emotions: Array.from(preferredEmotions),
         narrative_styles: Array.from(narrativeStyles),
@@ -424,7 +423,7 @@ export default function OnboardingPagePremium() {
                   animate="visible"
                   className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8"
                 >
-                  {genres.map((genre, index) => (
+                  {genres.map((genre) => (
                     <motion.button
                       key={genre.id}
                       variants={cardVariants}
