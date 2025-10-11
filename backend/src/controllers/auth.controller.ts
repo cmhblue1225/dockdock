@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSupabaseClient } from '../services/supabase.service';
+import { getSupabaseAdmin } from '../services/supabase.service';
 import { authService } from '../services/auth.service';
 import type { AuthenticatedRequest } from '../middleware/auth.middleware';
 
@@ -40,7 +40,7 @@ export const authController = {
         });
       }
 
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseAdmin();
 
       // 회원가입
       const { data, error } = await supabase.auth.signUp({
@@ -110,7 +110,7 @@ export const authController = {
         });
       }
 
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseAdmin();
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -151,7 +151,7 @@ export const authController = {
    */
   signOut: async (_req: Request, res: Response) => {
     try {
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseAdmin();
       const { error } = await supabase.auth.signOut();
 
       if (error) {
