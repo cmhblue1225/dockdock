@@ -18,8 +18,8 @@ const options: swaggerJsdoc.Options = {
         description: '로컬 개발 서버'
       },
       {
-        url: 'https://api.dockdock.app',
-        description: '프로덕션 서버'
+        url: 'https://dockdock-production.up.railway.app',
+        description: '프로덕션 서버 (Railway)'
       }
     ],
     components: {
@@ -90,24 +90,24 @@ const options: swaggerJsdoc.Options = {
         description: '책 검색 및 조회 API (알라딘 API 통합)'
       },
       {
-        name: 'Reading',
-        description: '독서 관리 API (독서 중인 책, 진행률 등)'
+        name: 'Reading Books',
+        description: '독서 목록 관리 API (위시리스트, 읽는중, 완독)'
       },
       {
-        name: 'Records',
-        description: '독서 기록 API (메모, 사진, 인용구 등)'
+        name: 'Reading Records',
+        description: '독서 기록 API (메모, 인용구, 생각 기록)'
       },
       {
         name: 'Reviews',
-        description: '독서 후기 및 평점 API'
+        description: '독서 리뷰 및 평점 API (완독 후 리뷰 작성)'
       },
       {
         name: 'Upload',
-        description: '파일 업로드 API (Supabase Storage)'
+        description: '파일 업로드 API (Supabase Storage) - 개발 예정'
       },
       {
         name: 'AI',
-        description: 'AI 기반 책 추천 및 인사이트 API (OpenAI)'
+        description: 'AI 기반 책 추천 및 인사이트 API - 개발 예정'
       }
     ]
   },

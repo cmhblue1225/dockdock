@@ -11,6 +11,7 @@ import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
+import BookDetailPage from './pages/BookDetailPage';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -59,6 +60,7 @@ function App() {
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/books/:readingBookId" element={<BookDetailPage />} />
           </Route>
 
           {/* 404 */}

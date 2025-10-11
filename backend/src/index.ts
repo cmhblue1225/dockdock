@@ -10,9 +10,9 @@ import { swaggerSpec } from '../swagger/config';
 import authRoutes from './routes/auth.routes';
 import booksRoutes from './routes/books.routes';
 import readingRoutes from './routes/reading.routes';
+import recordRoutes from './routes/record.routes';
+import reviewRoutes from './routes/review.routes';
 // TODO: 추가 라우트
-// import recordsRoutes from './routes/records.routes';
-// import reviewsRoutes from './routes/reviews.routes';
 // import uploadRoutes from './routes/upload.routes';
 // import aiRoutes from './routes/ai.routes';
 
@@ -101,10 +101,10 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/books', booksRoutes);
 app.use('/api/v1/reading-books', readingRoutes);
+app.use('/api/v1/reading-records', recordRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
 
 // TODO: 추가 라우트 등록
-// app.use('/api/reading-records', recordsRoutes);
-// app.use('/api/reviews', reviewsRoutes);
 // app.use('/api/upload', uploadRoutes);
 // app.use('/api/ai', aiRoutes);
 

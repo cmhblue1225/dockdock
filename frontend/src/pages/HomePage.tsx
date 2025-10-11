@@ -92,7 +92,7 @@ export default function HomePage() {
               : undefined;
 
           return (
-            <Link key={item.id} to={`/books/${item.book_id}`}>
+            <Link key={item.id} to={`/books/${item.id}`}>
               <BookCard
                 coverImageUrl={item.book.cover_image_url || undefined}
                 title={item.book.title}
