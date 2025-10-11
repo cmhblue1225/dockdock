@@ -251,6 +251,7 @@ export default function OnboardingPagePremium() {
         const reportData = {
           purposes: Array.from(readingPurposes),
           favorite_genres: Array.from(selectedGenres),
+          selected_book_ids: Array.from(selectedBooks),
           preferred_length: preferredLength || undefined,
           reading_pace: readingPace || undefined,
           preferred_difficulty: preferredDifficulty || undefined,

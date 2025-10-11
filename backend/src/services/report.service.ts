@@ -7,6 +7,7 @@ import {
   ReadingPersona,
   RadarChartPoint,
   RecommendedBookPreview,
+  RecommendationReason,
   GrowthPotential,
   ReportStatistics,
   ReadingDNA,
@@ -423,64 +424,217 @@ JSON 형식으로 응답해주세요.`;
   }
 
   /**
-   * 추천 도서 생성 (간소화 버전)
+   * 추천 도서 생성 (OpenAI + 알라딘 API 연동)
    */
   private async generateRecommendedBooks(
     userId: string,
     data: OnboardingData
   ): Promise<RecommendedBookPreview[]> {
-    // TODO: 실제 추천 시스템 연동
-    // 현재는 목업 데이터 반환
-    return [
-      {
-        bookId: 'book_1',
+    try {
+      console.log(`[ReportService] 추천 도서 생성 시작 - userId: ${userId}`);
+
+      // 1. OpenAI로 맞춤 추천 생성
+      const openAI = getOpenAIService();
+      const aiRecommendations = await openAI.generatePersonalizedRecommendations(
+        data.favorite_genres || [],
+        [], // 온보딩 시점이므로 읽은 책 없음
+        [], // 위시리스트 없음
+        3, // 3권만 추천
+        {
+          reading_purposes: data.purposes || [],
+          preferred_length: data.preferred_length,
+          reading_pace: data.reading_pace,
+          preferred_difficulty: data.preferred_difficulty,
+          preferred_moods: data.preferred_moods || [],
+          preferred_emotions: data.preferred_emotions || [],
+          narrative_styles: data.preferred_narrative_styles || [],
+          preferred_themes: data.preferred_themes || [],
+        }
+      );
+
+      console.log(`[ReportService] OpenAI 추천 ${aiRecommendations.length}권 생성 완료`);
+
+      // 2. 알라딘 API로 실제 책 검색 및 변환
+      const { getAladinClient } = await import('./aladin.service');
+      const aladinClient = getAladinClient();
+      const recommendations: RecommendedBookPreview[] = [];
+
+      for (const aiRec of aiRecommendations) {
+        try {
+          // 제목으로 검색
+          const { books } = await aladinClient.searchBooks({
+            query: aiRec.title,
+            queryType: 'Title',
+            maxResults: 1,
+          });
+
+          if (books.length > 0) {
+            const book = books[0];
+
+            // 매칭 점수 계산 (AI 점수를 100점 만점으로 변환)
+            const overallMatchScore = Math.round((aiRec.score || 0.9) * 100);
+
+            // 추천 이유 분석 (사용자 선호도와 연결)
+            const reasons = this.generateRecommendationReasons(
+              data,
+              aiRec.reason,
+              overallMatchScore
+            );
+
+            recommendations.push({
+              bookId: book.id,
+              title: book.title,
+              author: book.author,
+              coverImage: book.coverImage || '/placeholder-book.jpg',
+              overallMatchScore,
+              tagline: this.generateTagline(aiRec.reason),
+              reasons,
+            });
+
+            console.log(`[ReportService] 책 추가: ${book.title} (${overallMatchScore}%)`);
+          }
+        } catch (error) {
+          console.error(`[ReportService] 책 검색 실패: ${aiRec.title}`, error);
+          // 검색 실패 시 다음 책으로 계속
+        }
+      }
+
+      // 최소 1권 이상 추천 필요
+      if (recommendations.length === 0) {
+        console.warn('[ReportService] 추천 도서 생성 실패, 폴백 사용');
+        return this.getFallbackRecommendations(data);
+      }
+
+      console.log(`[ReportService] 최종 ${recommendations.length}권 추천 완료`);
+      return recommendations.slice(0, 3); // 최대 3권
+    } catch (error) {
+      console.error('[ReportService] 추천 도서 생성 중 오류:', error);
+      // 오류 시 폴백 추천 반환
+      return this.getFallbackRecommendations(data);
+    }
+  }
+
+  /**
+   * 추천 이유 생성 (사용자 선호도와 연결)
+   */
+  private generateRecommendationReasons(
+    data: OnboardingData,
+    aiReason: string,
+    matchScore: number
+  ): RecommendationReason[] {
+    const reasons: RecommendationReason[] = [];
+
+    // 1. 장르 매칭
+    if (data.favorite_genres && data.favorite_genres.length > 0) {
+      reasons.push({
+        category: 'genre' as const,
+        matchScore: Math.min(matchScore + 5, 98),
+        reason: `선호하시는 ${data.favorite_genres.slice(0, 2).join(', ')} 장르와 잘 어울립니다`,
+        relatedPreferences: data.favorite_genres,
+      });
+    }
+
+    // 2. 분위기/감정 매칭
+    if (data.preferred_moods && data.preferred_moods.length > 0) {
+      reasons.push({
+        category: 'mood' as const,
+        matchScore: matchScore - 3,
+        reason: `${data.preferred_moods[0]} 분위기를 좋아하시는 당신에게 딱 맞는 책입니다`,
+        relatedPreferences: data.preferred_moods,
+      });
+    }
+
+    // 3. 주제 매칭
+    if (data.preferred_themes && data.preferred_themes.length > 0) {
+      reasons.push({
+        category: 'theme' as const,
+        matchScore: matchScore - 5,
+        reason: `${data.preferred_themes[0]} 주제에 관심있으시다면 꼭 읽어보세요`,
+        relatedPreferences: data.preferred_themes,
+      });
+    }
+
+    // 4. AI 추천 이유 (기본)
+    if (reasons.length === 0) {
+      reasons.push({
+        category: 'personality' as const,
+        matchScore,
+        reason: aiReason || '당신의 독서 성향에 완벽하게 맞는 책입니다',
+        relatedPreferences: [],
+      });
+    }
+
+    return reasons.slice(0, 2); // 최대 2개 이유만 표시
+  }
+
+  /**
+   * 태그라인 생성 (짧고 감성적인 한 줄)
+   */
+  private generateTagline(aiReason: string): string {
+    // AI 추천 이유를 기반으로 짧은 태그라인 생성
+    if (aiReason.length > 50) {
+      return aiReason.substring(0, 47) + '...';
+    }
+    return aiReason || '당신을 위한 완벽한 선택';
+  }
+
+  /**
+   * 폴백 추천 (API 실패 시)
+   */
+  private getFallbackRecommendations(data: OnboardingData): RecommendedBookPreview[] {
+    console.log('[ReportService] 폴백 추천 사용');
+
+    // 장르 기반 기본 추천
+    const genreRecommendations: Record<string, RecommendedBookPreview> = {
+      '소설': {
+        bookId: 'fallback_1',
         title: '달러구트 꿈 백화점',
         author: '이미예',
-        coverImage: '/placeholder-book1.jpg',
-        overallMatchScore: 92,
-        tagline: '당신의 감성과 상상력이 만나는 완벽한 공간',
+        coverImage: '/placeholder-book.jpg',
+        overallMatchScore: 85,
+        tagline: '따뜻하고 감성적인 이야기',
         reasons: [
           {
-            category: 'mood',
-            matchScore: 95,
-            reason: '따뜻하고 감성적인 분위기가 당신의 선호와 완벽히 일치합니다',
-            relatedPreferences: data.preferred_moods || [],
+            category: 'genre' as const,
+            matchScore: 88,
+            reason: '소설 장르를 선호하시는 당신에게 추천합니다',
+            relatedPreferences: ['소설'],
           },
         ],
       },
-      {
-        bookId: 'book_2',
-        title: '아몬드',
-        author: '손원평',
-        coverImage: '/placeholder-book2.jpg',
-        overallMatchScore: 88,
-        tagline: '감정에 대한 깊은 성찰을 선사하는 작품',
+      '에세이': {
+        bookId: 'fallback_2',
+        title: '언어의 온도',
+        author: '이기주',
+        coverImage: '/placeholder-book.jpg',
+        overallMatchScore: 82,
+        tagline: '삶의 온기를 담은 에세이',
         reasons: [
           {
-            category: 'theme',
-            matchScore: 92,
-            reason: '성장과 자기 이해의 여정이 중심입니다',
-            relatedPreferences: data.preferred_themes || [],
+            category: 'genre' as const,
+            matchScore: 85,
+            reason: '에세이를 좋아하시는 당신을 위한 책입니다',
+            relatedPreferences: ['에세이'],
           },
         ],
       },
-      {
-        bookId: 'book_3',
-        title: '트렌드 코리아 2024',
-        author: '김난도',
-        coverImage: '/placeholder-book3.jpg',
-        overallMatchScore: 78,
-        tagline: '배움과 영감을 동시에 얻는 지적 여정',
-        reasons: [
-          {
-            category: 'genre',
-            matchScore: 80,
-            reason: '에세이 장르로 편안하게 읽을 수 있습니다',
-            relatedPreferences: data.favorite_genres || [],
-          },
-        ],
-      },
-    ];
+    };
+
+    const recommendations: RecommendedBookPreview[] = [];
+
+    // 사용자가 선택한 장르에 맞는 폴백 추천 선택
+    for (const genre of data.favorite_genres || []) {
+      if (genreRecommendations[genre]) {
+        recommendations.push(genreRecommendations[genre]);
+      }
+    }
+
+    // 장르 매칭 없으면 기본 추천
+    if (recommendations.length === 0) {
+      recommendations.push(genreRecommendations['소설']);
+    }
+
+    return recommendations.slice(0, 3);
   }
 
   /**

@@ -22,6 +22,7 @@ import {
   pageFadeVariants,
   zoomVariants,
 } from '../lib/animations';
+import api from '../lib/api';
 import type { OnboardingReport } from '../types/report';
 
 /**
@@ -41,222 +42,22 @@ export default function OnboardingReportPage() {
   const loadReport = async () => {
     try {
       setLoading(true);
-      // TODO: API 호출로 레포트 데이터 가져오기
-      // const response = await fetch('/api/v1/onboarding/report');
-      // const data = await response.json();
+      setError(null);
 
-      // 임시 목업 데이터
-      const mockReport: OnboardingReport = {
-        reportId: 'rep_' + Date.now(),
-        userId: 'user_123',
-        createdAt: new Date().toISOString(),
-        version: '1.0.0',
+      // 실제 API 호출
+      const response = await api.get('/api/v1/onboarding/report');
 
-        persona: {
-          title: '감성적인 탐험가',
-          subtitle: '깊은 감정과 새로운 세계를 동시에 추구하는 당신',
-          icon: '🌌',
-          colorTheme: {
-            primary: '#6366f1',
-            secondary: '#8b5cf6',
-            accent: '#ec4899',
-          },
-          description:
-            '당신은 책을 통해 새로운 세계를 탐험하면서도, 깊은 감정의 울림을 놓치지 않는 독특한 독서가입니다. 모험을 즐기면서도 섬세한 감성을 잃지 않는 균형잡힌 독서 스타일을 가지고 있습니다.',
-          keyTraits: [
-            '깊은 감정 이입 능력',
-            '새로운 세계에 대한 호기심',
-            '균형잡힌 독서 페이스',
-            '다양한 장르 수용력',
-            '성찰적 독서 태도',
-          ],
-          readingStrategy: [
-            '감정적으로 몰입할 수 있는 시간대를 선택하세요',
-            '한 권을 깊이 읽은 후 다른 장르로 전환해보세요',
-            '독서 노트를 작성하며 자신의 감정을 기록하세요',
-            '가끔은 완전히 새로운 장르에 도전해보세요',
-          ],
-        },
+      if (response.data.success) {
+        setReport(response.data.data);
+      } else {
+        throw new Error(response.data.message || '레포트를 불러오는데 실패했습니다');
+      }
 
-        personalityProfile: {
-          openness: {
-            score: 85,
-            level: 'high',
-            description: '새로운 경험과 아이디어에 매우 개방적입니다.',
-          },
-          conscientiousness: {
-            score: 70,
-            level: 'moderate',
-            description: '계획적이면서도 융통성 있는 독서 스타일입니다.',
-          },
-          extraversion: {
-            score: 45,
-            level: 'moderate',
-            description: '혼자만의 독서와 토론 모두를 즐깁니다.',
-          },
-          agreeableness: {
-            score: 80,
-            level: 'high',
-            description: '타인의 감정에 깊이 공감하는 성향입니다.',
-          },
-          neuroticism: {
-            score: 40,
-            level: 'low',
-            description: '정서적으로 안정적인 독서 경험을 선호합니다.',
-          },
-        },
-
-        readingDNA: {
-          purposes: {
-            primary: 'leisure',
-            secondary: ['learning', 'inspiration'],
-            analysis:
-              '당신은 즐거움을 최우선으로 하면서도, 배움과 영감을 놓치지 않는 독서를 추구합니다. 이는 매우 건강한 독서 태도입니다.',
-          },
-          style: {
-            length: 'medium',
-            pace: 'medium',
-            difficulty: 'moderate',
-            analysis:
-              '보통 길이의 책을 편안한 속도로 읽으며, 적당한 사고를 요구하는 책을 선호합니다. 이는 지속 가능한 독서 습관의 기반입니다.',
-          },
-          atmosphere: {
-            moods: ['bright', 'emotional', 'philosophical'],
-            emotions: ['touching', 'inspiration', 'humor'],
-            dominantMood: 'emotional',
-            emotionalRange: 'wide',
-            analysis:
-              '밝고 감성적이며 철학적인 분위기를 모두 즐기는 넓은 감정 범위를 가지고 있습니다. 이는 풍부한 독서 경험의 원천입니다.',
-          },
-          content: {
-            themes: ['growth', 'love', 'friendship', 'fantasy'],
-            narrativeStyles: ['descriptive', 'conversational'],
-            genres: ['소설', '에세이', 'SF/판타지'],
-            primaryTheme: 'growth',
-            analysis:
-              '성장 이야기를 중심으로 사랑, 우정, 판타지를 아우르는 다채로운 콘텐츠를 선호합니다. 묘사적이면서도 대화가 많은 서술을 좋아하는군요.',
-          },
-        },
-
-        radarChartData: [
-          { subject: '개방성', value: 85, category: 'personality', description: '새로운 경험 수용' },
-          { subject: '성실성', value: 70, category: 'personality', description: '계획적 독서' },
-          { subject: '외향성', value: 45, category: 'personality', description: '사회적 에너지' },
-          { subject: '친화성', value: 80, category: 'personality', description: '공감 능력' },
-          { subject: '안정성', value: 60, category: 'personality', description: '정서 안정' },
-        ],
-
-        recommendedBooks: [
-          {
-            bookId: 'book_1',
-            title: '달러구트 꿈 백화점',
-            author: '이미예',
-            coverImage: '/placeholder-book1.jpg',
-            overallMatchScore: 92,
-            tagline: '당신의 감성과 상상력이 만나는 완벽한 공간',
-            reasons: [
-              {
-                category: 'mood',
-                matchScore: 95,
-                reason: '따뜻하고 감성적인 분위기가 당신의 선호와 완벽히 일치합니다',
-                relatedPreferences: ['emotional', 'bright'],
-              },
-              {
-                category: 'theme',
-                matchScore: 90,
-                reason: '성장과 우정이라는 주제가 녹아있습니다',
-                relatedPreferences: ['growth', 'friendship'],
-              },
-            ],
-          },
-          {
-            bookId: 'book_2',
-            title: '아몬드',
-            author: '손원평',
-            coverImage: '/placeholder-book2.jpg',
-            overallMatchScore: 88,
-            tagline: '감정에 대한 깊은 성찰을 선사하는 작품',
-            reasons: [
-              {
-                category: 'theme',
-                matchScore: 92,
-                reason: '성장과 자기 이해의 여정이 중심입니다',
-                relatedPreferences: ['growth'],
-              },
-              {
-                category: 'style',
-                matchScore: 85,
-                reason: '적당한 난이도로 깊이 있는 사색을 유도합니다',
-                relatedPreferences: ['moderate'],
-              },
-            ],
-          },
-          {
-            bookId: 'book_3',
-            title: '트렌드 코리아 2024',
-            author: '김난도',
-            coverImage: '/placeholder-book3.jpg',
-            overallMatchScore: 78,
-            tagline: '배움과 영감을 동시에 얻는 지적 여정',
-            reasons: [
-              {
-                category: 'genre',
-                matchScore: 80,
-                reason: '에세이 장르로 편안하게 읽을 수 있습니다',
-                relatedPreferences: ['에세이'],
-              },
-              {
-                category: 'personality',
-                matchScore: 75,
-                reason: '높은 개방성을 가진 당신에게 새로운 시각을 제공합니다',
-                relatedPreferences: ['learning', 'inspiration'],
-              },
-            ],
-          },
-        ],
-
-        growthPotential: {
-          currentScope: 'moderate',
-          explorationAreas: [
-            {
-              area: '고전 문학',
-              reason: '당신의 성찰적 태도와 깊은 감성은 고전 문학과 잘 맞을 것입니다',
-              difficulty: 'moderate',
-            },
-            {
-              area: '하드 SF',
-              reason: '높은 개방성을 바탕으로 과학적 상상력을 탐험해보세요',
-              difficulty: 'challenging',
-            },
-            {
-              area: '그래픽 노블',
-              reason: '시각적 서사가 당신의 감성을 새로운 방식으로 자극할 것입니다',
-              difficulty: 'easy',
-            },
-          ],
-          growthPath:
-            '현재 당신은 감성과 지성의 균형이 잘 잡혀있습니다. 앞으로는 조금 더 도전적인 주제나 형식의 책을 시도해보세요. 당신의 높은 개방성과 공감 능력은 어떤 장르에서도 깊은 통찰을 얻을 수 있게 해줄 것입니다.',
-        },
-
-        statistics: {
-          totalResponses: 9,
-          diversityScore: 75,
-          clarityScore: 85,
-          completionRate: 100,
-        },
-
-        executiveSummary:
-          '당신은 감성적이면서도 지적인, 개방적이면서도 균형잡힌 독서가입니다. 새로운 세계를 탐험하는 것을 즐기면서도 깊은 감정의 울림을 놓치지 않는 특별한 재능을 가지고 있습니다. 이러한 독서 성향은 지속 가능하고 풍요로운 독서 생활의 토대가 될 것입니다.',
-
-        closingMessage:
-          '독서는 단순히 책을 읽는 것이 아니라, 자신을 발견하고 세상을 이해하는 여정입니다. 당신만의 독특한 독서 DNA를 바탕으로, 앞으로 더 많은 책과 만나고, 더 깊은 통찰을 얻어가시길 바랍니다. 즐거운 독서 여정을 응원합니다! 📚✨',
-      };
-
-      setReport(mockReport);
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load report:', err);
-      setError('레포트를 불러오는데 실패했습니다.');
+      const errorMessage = err.response?.data?.message || err.message || '레포트를 불러오는데 실패했습니다.';
+      setError(errorMessage);
       setLoading(false);
     }
   };
