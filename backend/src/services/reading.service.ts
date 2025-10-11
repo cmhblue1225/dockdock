@@ -116,7 +116,8 @@ export async function createReadingBook(
       book_id: dto.book_id,
       status: dto.status,
       current_page: dto.current_page || 0,
-      start_date: dto.start_date || (dto.status === 'reading' ? new Date().toISOString() : null),
+      total_pages: dto.total_pages || null,
+      started_at: dto.started_at || (dto.status === 'reading' ? new Date().toISOString() : null),
     })
     .select()
     .single();
@@ -141,23 +142,23 @@ export async function updateReadingBook(
     updated_at: new Date().toISOString(),
   };
 
-  // status가 'reading'으로 변경되는데 start_date가 없으면 자동 설정
-  if (dto.status === 'reading' && !dto.start_date) {
+  // status가 'reading'으로 변경되는데 started_at이 없으면 자동 설정
+  if (dto.status === 'reading' && !dto.started_at) {
     const { data: existing } = await supabase
       .from('reading_books')
-      .select('start_date')
+      .select('started_at')
       .eq('id', id)
       .eq('user_id', userId)
       .single();
 
-    if (existing && !existing.start_date) {
-      updateData.start_date = new Date().toISOString();
+    if (existing && !existing.started_at) {
+      updateData.started_at = new Date().toISOString();
     }
   }
 
-  // status가 'completed'로 변경되는데 end_date가 없으면 자동 설정
-  if (dto.status === 'completed' && !dto.end_date) {
-    updateData.end_date = new Date().toISOString();
+  // status가 'completed'로 변경되는데 completed_at이 없으면 자동 설정
+  if (dto.status === 'completed' && !dto.completed_at) {
+    updateData.completed_at = new Date().toISOString();
   }
 
   const { data, error } = await supabase

@@ -1,7 +1,7 @@
 /**
  * 읽고 있는 책의 상태
  */
-export type ReadingBookStatus = 'wishlist' | 'reading' | 'completed';
+export type ReadingBookStatus = 'wishlist' | 'reading' | 'completed' | 'paused';
 
 /**
  * 읽고 있는 책 (reading_books 테이블)
@@ -12,9 +12,10 @@ export interface ReadingBook {
   book_id: string;
   status: ReadingBookStatus;
   current_page: number;
-  start_date: string | null;
-  end_date: string | null;
-  created_at: string;
+  total_pages: number | null;
+  progress_percent: number | null; // 자동 계산 컬럼
+  started_at: string | null;
+  completed_at: string | null;
   updated_at: string;
 }
 
@@ -25,7 +26,8 @@ export interface CreateReadingBookDto {
   book_id: string;
   status: ReadingBookStatus;
   current_page?: number;
-  start_date?: string;
+  total_pages?: number;
+  started_at?: string;
 }
 
 /**
@@ -34,8 +36,9 @@ export interface CreateReadingBookDto {
 export interface UpdateReadingBookDto {
   status?: ReadingBookStatus;
   current_page?: number;
-  start_date?: string;
-  end_date?: string;
+  total_pages?: number;
+  started_at?: string;
+  completed_at?: string;
 }
 
 /**

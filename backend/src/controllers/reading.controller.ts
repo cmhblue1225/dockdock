@@ -95,11 +95,11 @@ export async function createReadingBook(req: Request, res: Response) {
       );
     }
 
-    if (!['wishlist', 'reading', 'completed'].includes(dto.status)) {
+    if (!['wishlist', 'reading', 'completed', 'paused'].includes(dto.status)) {
       return sendError(
         res,
         ErrorCodes.VALIDATION_ERROR,
-        'status는 wishlist, reading, completed 중 하나여야 합니다',
+        'status는 wishlist, reading, completed, paused 중 하나여야 합니다',
         null,
         400
       );
@@ -140,11 +140,11 @@ export async function updateReadingBook(req: Request, res: Response) {
     const dto: UpdateReadingBookDto = req.body;
 
     // status 검증
-    if (dto.status && !['wishlist', 'reading', 'completed'].includes(dto.status)) {
+    if (dto.status && !['wishlist', 'reading', 'completed', 'paused'].includes(dto.status)) {
       return sendError(
         res,
         ErrorCodes.VALIDATION_ERROR,
-        'status는 wishlist, reading, completed 중 하나여야 합니다',
+        'status는 wishlist, reading, completed, paused 중 하나여야 합니다',
         null,
         400
       );
