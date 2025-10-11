@@ -16,7 +16,7 @@ export async function getReviews(
   offset: number = 0
 ): Promise<{ data: ReviewWithBook[]; total: number }> {
   let query = supabase
-    .from('reviews')
+    .from('book_reviews')
     .select(
       `
       *,
@@ -62,7 +62,7 @@ export async function getReviewById(
   userId: string
 ): Promise<ReviewWithBook | null> {
   const { data, error } = await supabase
-    .from('reviews')
+    .from('book_reviews')
     .select(
       `
       *,
@@ -100,10 +100,10 @@ export async function createReview(
   userId: string,
   dto: CreateReviewDto
 ): Promise<Review> {
-  // reading_book이 현재 사용자의 것인지 확인
+  // reading_book이 현재 사용자의 것인지 확인하고 book_id도 가져오기
   const { data: readingBook } = await supabase
     .from('reading_books')
-    .select('id')
+    .select('id, book_id')
     .eq('id', dto.reading_book_id)
     .eq('user_id', userId)
     .single();
@@ -114,7 +114,7 @@ export async function createReview(
 
   // 이미 리뷰가 있는지 확인
   const { data: existing } = await supabase
-    .from('reviews')
+    .from('book_reviews')
     .select('id')
     .eq('reading_book_id', dto.reading_book_id)
     .eq('user_id', userId)
@@ -125,13 +125,14 @@ export async function createReview(
   }
 
   const { data, error } = await supabase
-    .from('reviews')
+    .from('book_reviews')
     .insert({
       user_id: userId,
+      book_id: readingBook.book_id,
       reading_book_id: dto.reading_book_id,
       rating: dto.rating,
-      review: dto.review || null,
-      one_liner: dto.one_liner || null,
+      review_text: dto.review_text || null,
+      is_public: false,
     })
     .select()
     .single();
@@ -157,7 +158,7 @@ export async function updateReview(
   };
 
   const { data, error } = await supabase
-    .from('reviews')
+    .from('book_reviews')
     .update(updateData)
     .eq('id', id)
     .eq('user_id', userId)
@@ -176,7 +177,7 @@ export async function updateReview(
  */
 export async function deleteReview(id: string, userId: string): Promise<void> {
   const { error } = await supabase
-    .from('reviews')
+    .from('book_reviews')
     .delete()
     .eq('id', id)
     .eq('user_id', userId);

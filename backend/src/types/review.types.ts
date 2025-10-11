@@ -1,13 +1,14 @@
 /**
- * 책 리뷰 (reviews 테이블)
+ * 책 리뷰 (book_reviews 테이블)
  */
 export interface Review {
   id: string;
-  reading_book_id: string;
   user_id: string;
+  book_id: string;
+  reading_book_id: string;
   rating: number; // 1-5
-  review: string | null;
-  one_liner: string | null;
+  review_text: string | null;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -18,8 +19,7 @@ export interface Review {
 export interface CreateReviewDto {
   reading_book_id: string;
   rating: number;
-  review?: string;
-  one_liner?: string;
+  review_text?: string;
 }
 
 /**
@@ -27,8 +27,8 @@ export interface CreateReviewDto {
  */
 export interface UpdateReviewDto {
   rating?: number;
-  review?: string;
-  one_liner?: string;
+  review_text?: string;
+  is_public?: boolean;
 }
 
 /**
