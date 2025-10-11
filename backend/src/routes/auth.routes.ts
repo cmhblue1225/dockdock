@@ -315,4 +315,45 @@ router.post('/reset-password', authController.resetPassword);
  */
 router.post('/social-login', authController.socialLogin);
 
+/**
+ * @swagger
+ * /api/auth/account:
+ *   delete:
+ *     summary: 회원 탈퇴
+ *     tags: [Authentication]
+ *     description: |
+ *       사용자 계정과 관련된 모든 데이터를 삭제합니다.
+ *       이 작업은 되돌릴 수 없으므로 신중하게 사용해야 합니다.
+ *
+ *       삭제되는 데이터:
+ *       - 사용자 인증 정보 (Supabase Auth)
+ *       - 프로필 정보
+ *       - 독서 기록 (읽는 중, 완독, 위시리스트)
+ *       - 독서 노트, 사진, 인용구
+ *       - 리뷰 및 평점
+ *       - 사용자 선호도 및 온보딩 레포트
+ *       - 추천 정보
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 회원 탈퇴 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 회원 탈퇴가 완료되었습니다. 그동안 독독을 이용해주셔서 감사합니다.
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       400:
+ *         description: 회원 탈퇴 실패
+ */
+router.delete('/account', authMiddleware, authController.deleteAccount);
+
 export default router;

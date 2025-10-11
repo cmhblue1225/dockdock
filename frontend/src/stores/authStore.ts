@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthState {
@@ -15,6 +16,7 @@ interface AuthState {
   signInWithKakao: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   initialize: () => Promise<void>;
 }
 
@@ -89,6 +91,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    await supabase.auth.signOut();
+    set({ user: null, session: null });
+  },
+
+  deleteAccount: async () => {
+    // 백엔드 API를 통해 회원 탈퇴
+    // Supabase Auth 사용자 삭제 + CASCADE로 모든 관련 데이터 삭제
+    await api.delete('/api/auth/account');
+
+    // 로컬 세션 정리
     await supabase.auth.signOut();
     set({ user: null, session: null });
   },

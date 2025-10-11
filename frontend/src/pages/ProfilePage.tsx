@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import Button from '../components/ui/Button';
 import { useAuthStore } from '../stores/authStore';
@@ -9,8 +10,9 @@ import { cardVariants } from '../lib/animations';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, deleteAccount } = useAuthStore();
   const { showToast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // 전체 통계 조회
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -73,6 +75,19 @@ export default function ProfilePage() {
       )
     ) {
       navigate('/onboarding');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount();
+      showToast('회원 탈퇴가 완료되었습니다. 그동안 이용해주셔서 감사합니다.', 'success');
+      navigate('/login');
+    } catch (error) {
+      console.error('회원 탈퇴 오류:', error);
+      showToast('회원 탈퇴에 실패했습니다', 'error');
+    } finally {
+      setShowDeleteDialog(false);
     }
   };
 
@@ -283,6 +298,24 @@ export default function ProfilePage() {
               <span className="mr-2">🚪</span>
               로그아웃
             </Button>
+
+            {/* 회원 탈퇴 */}
+            <div className="mt-8 pt-6 border-t-2 border-gray-200">
+              <div className="p-4 bg-red-50 rounded-xl mb-4">
+                <h3 className="text-sm font-bold text-red-900 mb-2">⚠️ 위험 영역</h3>
+                <p className="text-xs text-red-700">
+                  회원 탈퇴 시 모든 데이터가 영구적으로 삭제되며, 복구할 수 없습니다.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowDeleteDialog(true)}
+                variant="outline"
+                className="w-full text-red-700 border-red-400 hover:bg-red-100"
+              >
+                <span className="mr-2">🗑️</span>
+                회원 탈퇴
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -292,6 +325,96 @@ export default function ProfilePage() {
           <p className="mt-1">당신의 독서 여정을 함께합니다</p>
         </div>
       </div>
+
+      {/* 회원 탈퇴 확인 다이얼로그 */}
+      <AnimatePresence>
+        {showDeleteDialog && (
+          <>
+            {/* 백드롭 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteDialog(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+
+            {/* 다이얼로그 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
+                {/* 아이콘 */}
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                    <span className="text-3xl">⚠️</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-text-primary mb-2">
+                    정말 탈퇴하시겠습니까?
+                  </h2>
+                  <p className="text-text-secondary text-sm">
+                    이 작업은 되돌릴 수 없습니다
+                  </p>
+                </div>
+
+                {/* 삭제될 데이터 목록 */}
+                <div className="bg-red-50 rounded-2xl p-4 mb-6">
+                  <p className="text-sm font-bold text-red-900 mb-3">
+                    다음 데이터가 영구적으로 삭제됩니다:
+                  </p>
+                  <ul className="space-y-2 text-xs text-red-700">
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>프로필 및 계정 정보</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>독서 기록 (읽는 중, 완독, 위시리스트)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>독서 노트, 사진, 인용구</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>리뷰 및 평점</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>온보딩 레포트 및 선호도</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>추천 정보 및 통계</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 버튼 */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowDeleteDialog(false)}
+                    variant="outline"
+                    className="flex-1 border-gray-300 hover:bg-gray-100"
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    onClick={handleDeleteAccount}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    탈퇴하기
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

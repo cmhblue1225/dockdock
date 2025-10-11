@@ -376,5 +376,60 @@ export const authController = {
         error: 'SOCIAL_LOGIN_FAILED'
       });
     }
+  },
+
+  /**
+   * 회원 탈퇴
+   *
+   * DELETE /api/auth/account
+   * Authorization: Bearer {token}
+   *
+   * 사용자 계정과 관련된 모든 데이터를 삭제합니다.
+   * - Supabase Auth 사용자 삭제
+   * - profiles 테이블 CASCADE 삭제로 인한 관련 데이터 자동 삭제:
+   *   - reading_books, reading_records, reading_photos, reading_quotes
+   *   - book_reviews, user_preferences, recommendations
+   *   - onboarding_reports
+   */
+  deleteAccount: async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: '인증이 필요합니다',
+          error: 'UNAUTHORIZED'
+        });
+      }
+
+      const userId = user.id;
+
+      // Supabase Admin으로 사용자 삭제
+      // CASCADE 설정으로 인해 profiles와 관련된 모든 데이터가 자동으로 삭제됩니다
+      const supabase = getSupabaseAdmin();
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) {
+        console.error('회원 탈퇴 실패:', error);
+        return res.status(400).json({
+          success: false,
+          message: '회원 탈퇴에 실패했습니다',
+          error: 'DELETE_ACCOUNT_FAILED'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: '회원 탈퇴가 완료되었습니다. 그동안 독독을 이용해주셔서 감사합니다.'
+      });
+    } catch (error) {
+      console.error('회원 탈퇴 오류:', error);
+      return res.status(500).json({
+        success: false,
+        message: '회원 탈퇴 중 오류가 발생했습니다',
+        error: 'SERVER_ERROR'
+      });
+    }
   }
 };
