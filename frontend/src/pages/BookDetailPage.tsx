@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -61,9 +61,8 @@ export default function BookDetailPage() {
     record_type: 'note' as 'note' | 'quote' | 'thought',
   });
 
-  // 페이지 업데이트 모달
-  const [isPageUpdateModalOpen, setIsPageUpdateModalOpen] = useState(false);
-  const [newPageNumber, setNewPageNumber] = useState('');
+  // 페이지 업데이트 (슬라이더로 변경)
+  const [currentPageInput, setCurrentPageInput] = useState(0);
 
   // 독서 완료 모달
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
@@ -121,8 +120,6 @@ export default function BookDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['reading-book', readingBookId] });
       queryClient.invalidateQueries({ queryKey: ['reading-books'] });
       showToast('현재 페이지가 업데이트되었습니다', 'success');
-      setIsPageUpdateModalOpen(false);
-      setNewPageNumber('');
     },
     onError: (error: any) => {
       const message = error.response?.data?.error?.message || '페이지 업데이트에 실패했습니다';
@@ -224,19 +221,14 @@ export default function BookDetailPage() {
     });
   };
 
-  const handleUpdatePage = () => {
-    const pageNum = parseInt(newPageNumber);
-    if (isNaN(pageNum) || pageNum < 0) {
-      showToast('유효한 페이지 번호를 입력해주세요', 'warning');
-      return;
-    }
+  const handleSliderChange = (value: number) => {
+    setCurrentPageInput(value);
+  };
 
-    if (readingBook?.book.page_count && pageNum > readingBook.book.page_count) {
-      showToast(`페이지는 ${readingBook.book.page_count}페이지 이하여야 합니다`, 'warning');
-      return;
+  const handleSliderCommit = () => {
+    if (currentPageInput !== readingBook?.current_page) {
+      updatePageMutation.mutate(currentPageInput);
     }
-
-    updatePageMutation.mutate(pageNum);
   };
 
   const handleComplete = () => {
@@ -253,6 +245,13 @@ export default function BookDetailPage() {
   const review: Review | undefined = reviewQueryData?.data?.items?.[0];
 
   const progress = readingBook?.progress_percent || 0;
+
+  // readingBook이 로드되면 currentPageInput 초기화
+  useEffect(() => {
+    if (readingBook) {
+      setCurrentPageInput(readingBook.current_page);
+    }
+  }, [readingBook]);
 
   const recordTypeLabels = {
     note: { icon: '📝', label: '메모', color: 'bg-blue-100 text-blue-700' },
@@ -302,43 +301,96 @@ export default function BookDetailPage() {
                 <p className="text-text-secondary text-sm mb-4">{readingBook.book.publisher}</p>
               )}
 
-              {/* 진행률 */}
+              {/* 페이지 트래커 (감성적 슬라이더) */}
               {readingBook.status === 'reading' && readingBook.book.page_count && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-text-secondary">진행률</span>
-                    <span className="text-lg font-bold text-ios-green">{Math.round(progress)}%</span>
+                <div className="mt-6">
+                  {/* 헤더 */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">📖</span>
+                      <span className="text-sm font-semibold text-text-primary">독서 진행 상황</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold bg-gradient-to-r from-ios-green to-ios-green-light bg-clip-text text-transparent">
+                        {Math.round(progress)}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-ios-green to-ios-green-light h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
+
+                  {/* 현재 페이지 표시 */}
+                  <div className="bg-gradient-to-r from-ios-green/10 to-ios-green-light/10 rounded-2xl p-4 mb-3">
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-3xl font-bold text-ios-green">{currentPageInput}</span>
+                      <span className="text-text-secondary">/</span>
+                      <span className="text-2xl font-semibold text-text-secondary">
+                        {readingBook.book.page_count}
+                      </span>
+                      <span className="text-sm text-text-secondary">페이지</span>
+                    </div>
+                  </div>
+
+                  {/* 슬라이더 */}
+                  <div className="relative px-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max={readingBook.book.page_count}
+                      value={currentPageInput}
+                      onChange={(e) => handleSliderChange(parseInt(e.target.value))}
+                      onMouseUp={handleSliderCommit}
+                      onTouchEnd={handleSliderCommit}
+                      className="w-full h-3 bg-gradient-to-r from-gray-200 via-ios-green/30 to-ios-green-light/30 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-6
+                        [&::-webkit-slider-thumb]:h-6
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-gradient-to-br
+                        [&::-webkit-slider-thumb]:from-ios-green
+                        [&::-webkit-slider-thumb]:to-ios-green-dark
+                        [&::-webkit-slider-thumb]:shadow-lg
+                        [&::-webkit-slider-thumb]:shadow-ios-green/30
+                        [&::-webkit-slider-thumb]:cursor-grab
+                        [&::-webkit-slider-thumb]:active:cursor-grabbing
+                        [&::-webkit-slider-thumb]:hover:scale-110
+                        [&::-webkit-slider-thumb]:transition-transform
+                        [&::-moz-range-thumb]:w-6
+                        [&::-moz-range-thumb]:h-6
+                        [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:bg-gradient-to-br
+                        [&::-moz-range-thumb]:from-ios-green
+                        [&::-moz-range-thumb]:to-ios-green-dark
+                        [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:shadow-lg
+                        [&::-moz-range-thumb]:shadow-ios-green/30
+                        [&::-moz-range-thumb]:cursor-grab
+                        [&::-moz-range-thumb]:active:cursor-grabbing
+                        [&::-moz-range-thumb]:hover:scale-110
+                        [&::-moz-range-thumb]:transition-transform"
+                      style={{
+                        background: `linear-gradient(to right,
+                          rgb(52, 211, 153) 0%,
+                          rgb(52, 211, 153) ${progress}%,
+                          rgb(229, 231, 235) ${progress}%,
+                          rgb(229, 231, 235) 100%)`
+                      }}
                     />
                   </div>
-                  <p className="text-xs text-text-secondary mt-2">
-                    {readingBook.current_page} / {readingBook.book.page_count} 페이지
-                  </p>
+
+                  {/* 메시지 */}
+                  <div className="mt-3 text-center">
+                    <p className="text-xs text-text-secondary italic">
+                      슬라이더를 움직여 현재 읽고 있는 페이지를 기록하세요 ✨
+                    </p>
+                  </div>
                 </div>
               )}
 
               {/* 액션 버튼 */}
               <div className="flex gap-2 mt-4">
                 {readingBook.status === 'reading' && (
-                  <>
-                    <Button
-                      onClick={() => {
-                        setNewPageNumber(readingBook.current_page.toString());
-                        setIsPageUpdateModalOpen(true);
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      📖 페이지 업데이트
-                    </Button>
-                    <Button onClick={() => setIsCompleteModalOpen(true)} variant="primary" size="sm">
-                      ✅ 독서 완료하기
-                    </Button>
-                  </>
+                  <Button onClick={() => setIsCompleteModalOpen(true)} variant="primary" size="sm" className="w-full">
+                    ✅ 독서 완료하기
+                  </Button>
                 )}
               </div>
 
@@ -607,60 +659,6 @@ export default function BookDetailPage() {
               isLoading={createRecordMutation.isPending}
             >
               저장
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* 페이지 업데이트 모달 */}
-      <Modal
-        isOpen={isPageUpdateModalOpen}
-        onClose={() => {
-          setIsPageUpdateModalOpen(false);
-          setNewPageNumber('');
-        }}
-        title="현재 페이지 업데이트"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              현재 읽고 있는 페이지
-            </label>
-            <input
-              type="number"
-              value={newPageNumber}
-              onChange={(e) => setNewPageNumber(e.target.value)}
-              placeholder="예: 156"
-              min="0"
-              max={readingBook.book.page_count || undefined}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent"
-            />
-            {readingBook.book.page_count && (
-              <p className="text-xs text-text-secondary mt-2">
-                총 {readingBook.book.page_count}페이지
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsPageUpdateModalOpen(false);
-                setNewPageNumber('');
-              }}
-              className="flex-1"
-              disabled={updatePageMutation.isPending}
-            >
-              취소
-            </Button>
-            <Button
-              onClick={handleUpdatePage}
-              className="flex-1"
-              isLoading={updatePageMutation.isPending}
-            >
-              업데이트
             </Button>
           </div>
         </div>
