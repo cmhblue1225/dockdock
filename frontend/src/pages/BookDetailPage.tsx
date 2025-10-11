@@ -33,6 +33,18 @@ interface ReadingRecord {
   created_at: string;
 }
 
+interface Review {
+  id: string;
+  user_id: string;
+  book_id: string;
+  reading_book_id: string;
+  rating: number;
+  review_text: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function BookDetailPage() {
   const { readingBookId } = useParams<{ readingBookId: string }>();
   const navigate = useNavigate();
@@ -79,6 +91,18 @@ export default function BookDetailPage() {
     queryFn: async () => {
       const response = await api.get('/api/v1/reading-records', {
         params: { reading_book_id: readingBookId, limit: 100 },
+      });
+      return response.data;
+    },
+    enabled: !!readingBookId,
+  });
+
+  // 리뷰 조회 (완독한 책인 경우)
+  const { data: reviewQueryData } = useQuery({
+    queryKey: ['review', readingBookId],
+    queryFn: async () => {
+      const response = await api.get('/api/v1/reviews', {
+        params: { reading_book_id: readingBookId },
       });
       return response.data;
     },
@@ -226,6 +250,7 @@ export default function BookDetailPage() {
 
   const readingBook: ReadingBook | undefined = readingBookData?.data;
   const records: ReadingRecord[] = recordsData?.data?.items || [];
+  const review: Review | undefined = reviewQueryData?.data?.items?.[0];
 
   const progress = readingBook?.progress_percent || 0;
 
@@ -338,6 +363,60 @@ export default function BookDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* 리뷰 섹션 (완독한 책인 경우) */}
+        {readingBook.status === 'completed' && review && (
+          <div className="bg-gradient-to-br from-warning/10 to-warning/5 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-custom mb-6 border border-warning/20">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <span>✨</span>
+                나의 리뷰
+              </h2>
+              <span className="text-sm text-text-secondary">
+                {new Date(review.created_at).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+
+            {/* 별점 표시 */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    className={`w-8 h-8 ${
+                      star <= review.rating
+                        ? 'fill-warning text-warning'
+                        : 'fill-gray-300 text-gray-300'
+                    }`}
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-2xl font-bold text-warning">{review.rating}.0</span>
+            </div>
+
+            {/* 리뷰 텍스트 */}
+            {review.review_text && (
+              <div className="bg-white/50 rounded-xl p-4 border border-warning/10">
+                <p className="text-text-primary whitespace-pre-wrap leading-relaxed">
+                  {review.review_text}
+                </p>
+              </div>
+            )}
+
+            {!review.review_text && (
+              <p className="text-text-secondary text-sm italic">
+                평점만 남기고 후기는 작성하지 않으셨습니다
+              </p>
+            )}
+          </div>
+        )}
 
         {/* 탭 */}
         <div className="bg-white/60 backdrop-blur-sm rounded-3xl shadow-custom mb-6">
