@@ -12,6 +12,8 @@ interface AuthState {
   setSession: (session: Session | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -56,6 +58,34 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: data.user,
       session: data.session,
     });
+  },
+
+  signInWithGoogle: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+
+    // OAuth는 리다이렉트 방식이므로 여기서 세션을 설정하지 않음
+    // 콜백에서 세션이 자동으로 설정됨
+  },
+
+  signInWithApple: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+
+    // OAuth는 리다이렉트 방식이므로 여기서 세션을 설정하지 않음
+    // 콜백에서 세션이 자동으로 설정됨
   },
 
   signOut: async () => {

@@ -1,14 +1,19 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
 
-// TODO: 인증 확인 후 구현
-// import { useAuthStore } from './stores/authStore';
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Store
+import { useAuthStore } from './stores/authStore';
 
 // React Query 클라이언트 설정
 const queryClient = new QueryClient({
@@ -21,8 +26,12 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // TODO: 실제 인증 상태 확인
-  const isAuthenticated = false;
+  const { initialize } = useAuthStore();
+
+  // 앱 시작 시 인증 상태 초기화
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -30,17 +39,36 @@ function App() {
         <Routes>
           {/* 공개 라우트 */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
           {/* 보호된 라우트 */}
-          {isAuthenticated ? (
-            <>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/library" element={<LibraryPage />} />
-              <Route path="/search" element={<SearchPage />} />
-            </>
-          ) : (
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          )}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/library"
+            element={
+              <ProtectedRoute>
+                <LibraryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <SearchPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </QueryClientProvider>

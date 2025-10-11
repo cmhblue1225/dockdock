@@ -7,9 +7,9 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from '../swagger/config';
 
 // 라우트 임포트
+import authRoutes from './routes/auth.routes';
 import booksRoutes from './routes/books.routes';
 // TODO: 추가 라우트
-// import authRoutes from './routes/auth.routes';
 // import readingRoutes from './routes/reading.routes';
 // import recordsRoutes from './routes/records.routes';
 // import reviewsRoutes from './routes/reviews.routes';
@@ -74,9 +74,9 @@ app.get('/health', (_req: Request, res: Response) => {
 // API 라우트 등록
 // ============================================
 
+app.use('/api/auth', authRoutes);
 app.use('/api/books', booksRoutes);
 // TODO: 추가 라우트 등록
-// app.use('/api/auth', authRoutes);
 // app.use('/api/reading-books', readingRoutes);
 // app.use('/api/reading-records', recordsRoutes);
 // app.use('/api/reviews', reviewsRoutes);

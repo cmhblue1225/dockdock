@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuthStore();
+  const { signIn, signInWithGoogle, signInWithApple } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +25,28 @@ export default function LoginPage() {
       setError(err.message || '로그인에 실패했습니다');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setSocialLoading(true);
+    try {
+      await signInWithGoogle();
+      // OAuth는 자동으로 리다이렉트됨
+    } catch (err: any) {
+      setError(err.message || 'Google 로그인에 실패했습니다');
+      setSocialLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setSocialLoading(true);
+    try {
+      await signInWithApple();
+      // OAuth는 자동으로 리다이렉트됨
+    } catch (err: any) {
+      setError(err.message || 'Apple 로그인에 실패했습니다');
+      setSocialLoading(false);
     }
   };
 
@@ -99,17 +122,9 @@ export default function LoginPage() {
 
             {/* 추가 링크 */}
             <div className="flex justify-center space-x-4 text-sm text-text-secondary">
-              <button type="button" className="hover:text-text-primary">
-                아이디 찾기
-              </button>
-              <span>|</span>
-              <button type="button" className="hover:text-text-primary">
-                비밀번호 찾기
-              </button>
-              <span>|</span>
-              <button type="button" className="hover:text-text-primary">
+              <Link to="/signup" className="text-ios-green font-semibold hover:underline">
                 회원가입
-              </button>
+              </Link>
             </div>
           </form>
 
@@ -125,7 +140,9 @@ export default function LoginPage() {
             {/* Apple 로그인 */}
             <button
               type="button"
-              className="w-full bg-black text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-gray-800 transition-colors"
+              onClick={handleAppleLogin}
+              disabled={socialLoading}
+              className="w-full bg-black text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-xl">🍎</span>
               <span>Apple로 로그인</span>
@@ -134,12 +151,20 @@ export default function LoginPage() {
             {/* Google 로그인 */}
             <button
               type="button"
-              className="w-full bg-white border-2 border-border-color text-text-primary py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-background transition-colors"
+              onClick={handleGoogleLogin}
+              disabled={socialLoading}
+              className="w-full bg-white border-2 border-border-color text-text-primary py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-xl">G</span>
               <span>Google로 로그인</span>
             </button>
           </div>
+
+          {/* 소셜 로그인 안내 */}
+          <p className="text-xs text-text-secondary text-center mt-4">
+            ⚠️ 소셜 로그인을 사용하려면 Supabase Dashboard에서<br />
+            Apple/Google Provider 설정이 필요합니다
+          </p>
         </div>
       </div>
     </div>
