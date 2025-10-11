@@ -30,8 +30,32 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS 설정
+const allowedOrigins = [
+  'http://localhost:5173',              // 로컬 개발
+  'http://localhost:3000',              // 로컬 개발 (대체 포트)
+  'https://dockdock.minhyuk.kr',        // 프로덕션 프론트엔드
+  'https://dockdock-l0e8.onrender.com'  // Render 백엔드 (Swagger 문서용)
+];
+
+// 환경 변수로 추가 origin 허용
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // origin이 없는 경우 (예: Postman, curl) 허용
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
