@@ -24,6 +24,7 @@ import {
 } from '../lib/animations';
 import api from '../lib/api';
 import type { OnboardingReport } from '../types/report';
+import BookDetailModal from '../components/BookDetailModal';
 
 /**
  * 온보딩 레포트 페이지
@@ -34,6 +35,8 @@ export default function OnboardingReportPage() {
   const [report, setReport] = useState<OnboardingReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -549,7 +552,11 @@ export default function OnboardingReportPage() {
                   </div>
 
                   <motion.button
-                    className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium"
+                    onClick={() => {
+                      setSelectedBookId(book.bookId);
+                      setIsModalOpen(true);
+                    }}
+                    className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -750,6 +757,18 @@ export default function OnboardingReportPage() {
           </motion.p>
         </motion.div>
       </section>
+
+      {/* Book Detail Modal */}
+      {selectedBookId && (
+        <BookDetailModal
+          bookId={selectedBookId}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedBookId(null);
+          }}
+        />
+      )}
     </motion.div>
   );
 }

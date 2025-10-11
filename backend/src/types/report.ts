@@ -112,6 +112,7 @@ export interface RecommendedBookPreview {
   overallMatchScore: number;
   reasons: RecommendationReason[];
   tagline: string;
+  link?: string; // 알라딘 상세 페이지 링크
 }
 
 /**

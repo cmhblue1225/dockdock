@@ -489,6 +489,7 @@ JSON 형식으로 응답해주세요.`;
               overallMatchScore,
               tagline: this.generateTagline(aiRec.reason),
               reasons,
+              link: book.link, // 알라딘 상세 페이지 링크
             });
 
             console.log(`[ReportService] 책 추가: ${book.title} (${overallMatchScore}%)`);

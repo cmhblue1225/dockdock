@@ -159,6 +159,9 @@ export interface RecommendedBookPreview {
 
   /** 한 줄 추천 문구 (AI 생성) */
   tagline: string;
+
+  /** 알라딘 상세 페이지 링크 (선택적) */
+  link?: string;
 }
 
 /**

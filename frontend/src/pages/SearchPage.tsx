@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { getPersonalizedRecommendations, getTrendingBooks } from '../lib/recommendationApi';
 import BookRegistrationModal from '../components/ui/BookRegistrationModal';
+import BookDetailModal from '../components/BookDetailModal';
 import { useAuthStore } from '../stores/authStore';
 
 interface Book {
@@ -24,6 +25,8 @@ export default function SearchPage() {
   const [activeSearch, setActiveSearch] = useState('');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [bookDetailId, setBookDetailId] = useState<string | null>(null);
+  const [isBookDetailOpen, setIsBookDetailOpen] = useState(false);
 
   // 책 검색 쿼리
   const { data, isLoading, error } = useQuery({
@@ -169,7 +172,10 @@ export default function SearchPage() {
                   {recommendedBooks.map((book: any) => (
                     <div
                       key={book.id}
-                      onClick={() => navigate(`/book/${book.id}`)}
+                      onClick={() => {
+                        setBookDetailId(book.id);
+                        setIsBookDetailOpen(true);
+                      }}
                       className="group cursor-pointer"
                     >
                       <div className="relative rounded-xl overflow-hidden shadow-custom hover:shadow-custom-lg transition-all group-hover:scale-105">
@@ -208,7 +214,10 @@ export default function SearchPage() {
                   {trendingBooks.map((book: any, index: number) => (
                     <div
                       key={book.id}
-                      onClick={() => navigate(`/book/${book.id}`)}
+                      onClick={() => {
+                        setBookDetailId(book.id);
+                        setIsBookDetailOpen(true);
+                      }}
                       className="flex gap-4 bg-surface p-4 rounded-xl shadow-custom hover:shadow-custom-lg transition-all cursor-pointer group hover:scale-[1.02]"
                     >
                       {/* 순위 표시 */}
@@ -272,6 +281,18 @@ export default function SearchPage() {
         onClose={handleCloseModal}
         book={selectedBook}
       />
+
+      {/* 책 상세 모달 */}
+      {bookDetailId && (
+        <BookDetailModal
+          bookId={bookDetailId}
+          isOpen={isBookDetailOpen}
+          onClose={() => {
+            setIsBookDetailOpen(false);
+            setBookDetailId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
