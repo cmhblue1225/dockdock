@@ -12,11 +12,11 @@ export default {
         secondary: '#8B7355',     // 다크 브라운
         accent: '#E8B88B',        // 라이트 브라운
         background: '#F5F5F0',    // 아이보리/베이지
-        surface: '#FEFDFB',       // 화이트
+        surface: '#F0E6DA',       // 베이지/크림 (카드 배경)
         'sidebar-bg': '#FFFFFF',  // 사이드바
         'text-primary': '#2C2C2C',   // 다크 그레이
         'text-secondary': '#8E8E93', // 그레이
-        'ios-green': '#5E6B3D',      // 로그인 화면의 올리브 그린
+        'ios-green': '#4F6815',      // 올리브 그린 (배경색/포인트색)
         'border-color': '#E5E5E0',
       },
       fontFamily: {

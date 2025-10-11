@@ -16,7 +16,7 @@
 독독(DockDock)은 웹과 iOS 플랫폼에서 사용 가능한 독서 관리 플랫폼입니다.
 
 ### 주요 기능
-- ✅ **사용자 인증** - 이메일/비밀번호, Apple, Google 소셜 로그인
+- ✅ **사용자 인증** - 이메일/비밀번호, Apple, Kakao 소셜 로그인
 - ✅ **책 검색** - 알라딘 API 연동으로 국내 모든 도서 검색
 - 📖 **독서 관리** - 읽고 있는 책 추적, 진행률 기록
 - 📝 **독서 기록** - 메모, 인용구, 사진 첨부
@@ -208,8 +208,8 @@ const { signIn } = useAuthStore();
 await signIn('email@example.com', 'password');
 
 // 소셜 로그인
-const { signInWithGoogle, signInWithApple } = useAuthStore();
-await signInWithGoogle(); // 또는 signInWithApple()
+const { signInWithKakao, signInWithApple } = useAuthStore();
+await signInWithKakao(); // 또는 signInWithApple()
 ```
 
 ### iOS (Swift)
@@ -239,7 +239,7 @@ request.addValue("Bearer \(accessToken)",
 ```
 
 ### 소셜 로그인 플로우
-1. iOS에서 Apple/Google Sign In SDK로 ID Token 획득
+1. iOS에서 Apple/Kakao Sign In SDK로 ID Token 획득
 2. `POST /api/auth/social-login`으로 ID Token 전송
 3. 응답에서 `access_token`, `refresh_token` 저장
 4. 이후 모든 API 호출 시 Bearer 토큰 사용

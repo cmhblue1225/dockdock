@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import AppleLogo from '../components/icons/AppleLogo';
+import KakaoLogo from '../components/icons/KakaoLogo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, signInWithApple } = useAuthStore();
+  const { signIn, signInWithKakao, signInWithApple } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,13 +30,13 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleKakaoLogin = async () => {
     setSocialLoading(true);
     try {
-      await signInWithGoogle();
+      await signInWithKakao();
       // OAuth는 자동으로 리다이렉트됨
     } catch (err: any) {
-      setError(err.message || 'Google 로그인에 실패했습니다');
+      setError(err.message || 'Kakao 로그인에 실패했습니다');
       setSocialLoading(false);
     }
   };
@@ -54,11 +56,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-ios-green flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* 로고 및 헤더 */}
-        <div className="text-center mb-12 text-surface">
-          <div className="text-5xl mb-4">📚</div>
+        <div className="text-center mb-8 text-white">
           <h1 className="text-3xl font-bold mb-2">똑똑한 독서 습관,</h1>
           <h2 className="text-3xl font-bold mb-4">독독하자에서 시작하세요.</h2>
-          <p className="text-surface/80">
+          <p className="text-white/80 text-base">
             읽은 책을 기록하고, 새로운 책을 추천받아 보세요.
           </p>
         </div>
@@ -73,7 +74,7 @@ export default function LoginPage() {
                 placeholder="아이디 입력"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border-b-2 border-border-color focus:outline-none focus:border-ios-green placeholder:text-text-secondary"
                 required
               />
             </div>
@@ -85,7 +86,7 @@ export default function LoginPage() {
                 placeholder="비밀번호 입력"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-3 bg-white border-b-2 border-border-color focus:outline-none focus:border-ios-green placeholder:text-text-secondary"
                 required
               />
             </div>
@@ -97,7 +98,7 @@ export default function LoginPage() {
                 id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-5 h-5 text-ios-green border-border-color rounded focus:ring-primary"
+                className="w-5 h-5 text-ios-green border-text-secondary rounded focus:ring-ios-green accent-ios-green"
               />
               <label htmlFor="remember" className="ml-3 text-text-primary font-medium">
                 자동 로그인
@@ -115,56 +116,54 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-ios-green text-surface py-3 rounded-lg font-semibold hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-ios-green text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '로그인 중...' : '로그인'}
             </button>
 
             {/* 추가 링크 */}
             <div className="flex justify-center space-x-4 text-sm text-text-secondary">
-              <Link to="/signup" className="text-ios-green font-semibold hover:underline">
+              <button type="button" className="hover:text-text-primary">아이디 찾기</button>
+              <span>|</span>
+              <button type="button" className="hover:text-text-primary">비밀번호 찾기</button>
+              <span>|</span>
+              <Link to="/signup" className="text-text-primary font-semibold hover:text-ios-green">
                 회원가입
               </Link>
             </div>
           </form>
 
-          {/* 구분선 */}
-          <div className="my-8 flex items-center">
-            <div className="flex-1 border-t border-border-color"></div>
-            <span className="px-4 text-text-secondary text-sm">다른 방법으로 로그인</span>
-            <div className="flex-1 border-t border-border-color"></div>
+          {/* 다른 방법으로 로그인 */}
+          <div className="text-center my-6">
+            <p className="text-text-secondary text-sm">다른 방법으로 로그인</p>
           </div>
 
           {/* 소셜 로그인 버튼 */}
           <div className="space-y-3">
-            {/* Apple 로그인 */}
+            {/* Apple 로그인 - 공식 디자인 가이드라인 준수 */}
             <button
               type="button"
               onClick={handleAppleLogin}
               disabled={socialLoading}
-              className="w-full bg-black text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-3 hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ minHeight: '44px' }}
             >
-              <span className="text-xl">🍎</span>
-              <span>Apple로 로그인</span>
+              <AppleLogo className="w-5 h-5" />
+              <span className="text-base">Apple로 로그인</span>
             </button>
 
-            {/* Google 로그인 */}
+            {/* Kakao 로그인 */}
             <button
               type="button"
-              onClick={handleGoogleLogin}
+              onClick={handleKakaoLogin}
               disabled={socialLoading}
-              className="w-full bg-white border-2 border-border-color text-text-primary py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#FEE500] text-[#000000] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-3 hover:bg-[#FDD835] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ minHeight: '44px' }}
             >
-              <span className="text-xl">G</span>
-              <span>Google로 로그인</span>
+              <KakaoLogo className="w-5 h-5" />
+              <span className="text-base">Kakao로 로그인</span>
             </button>
           </div>
-
-          {/* 소셜 로그인 안내 */}
-          <p className="text-xs text-text-secondary text-center mt-4">
-            ⚠️ 소셜 로그인을 사용하려면 Supabase Dashboard에서<br />
-            Apple/Google Provider 설정이 필요합니다
-          </p>
         </div>
       </div>
     </div>

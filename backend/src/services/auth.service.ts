@@ -88,14 +88,14 @@ export class AuthService {
   /**
    * 소셜 로그인 토큰 검증 (iOS용)
    *
-   * iOS 앱에서 Apple/Google Sign In SDK로 얻은 ID Token을 검증하고
+   * iOS 앱에서 Apple/Kakao Sign In SDK로 얻은 ID Token을 검증하고
    * Supabase 세션을 생성합니다.
    *
-   * @param provider - 'apple' | 'google'
+   * @param provider - 'apple' | 'kakao'
    * @param idToken - Provider에서 발급한 ID Token
    * @returns 세션 정보
    */
-  async signInWithProviderToken(provider: 'apple' | 'google', idToken: string) {
+  async signInWithProviderToken(provider: 'apple' | 'kakao', idToken: string) {
     try {
       const { data, error } = await this.supabaseAdmin.auth.signInWithIdToken({
         provider,

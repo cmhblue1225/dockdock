@@ -257,10 +257,10 @@ router.post('/reset-password', authController.resetPassword);
  *     summary: 소셜 로그인 (iOS용)
  *     tags: [Authentication]
  *     description: |
- *       iOS 앱에서 Apple/Google Sign In SDK로 얻은 ID Token을 검증하고 세션을 생성합니다.
+ *       iOS 앱에서 Apple/Kakao Sign In SDK로 얻은 ID Token을 검증하고 세션을 생성합니다.
  *
  *       **iOS 사용 방법:**
- *       1. Apple/Google Sign In SDK로 로그인하여 ID Token 획득
+ *       1. Apple/Kakao Sign In SDK로 로그인하여 ID Token 획득
  *       2. 이 API로 ID Token 전송
  *       3. 응답에서 access_token과 refresh_token 저장
  *       4. 이후 모든 API 호출 시 Authorization 헤더에 Bearer {access_token} 포함
@@ -276,7 +276,7 @@ router.post('/reset-password', authController.resetPassword);
  *             properties:
  *               provider:
  *                 type: string
- *                 enum: [apple, google]
+ *                 enum: [apple, kakao]
  *                 example: apple
  *               idToken:
  *                 type: string

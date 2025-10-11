@@ -329,12 +329,12 @@ export const authController = {
    *
    * POST /api/auth/social-login
    *
-   * iOS 앱에서 Apple/Google Sign In SDK로 얻은 ID Token을 검증하고
+   * iOS 앱에서 Apple/Kakao Sign In SDK로 얻은 ID Token을 검증하고
    * Supabase 세션을 생성합니다.
    *
    * Request Body:
    * {
-   *   "provider": "apple" | "google",
+   *   "provider": "apple" | "kakao",
    *   "idToken": "eyJhbGc..."
    * }
    */
@@ -350,10 +350,10 @@ export const authController = {
         });
       }
 
-      if (provider !== 'apple' && provider !== 'google') {
+      if (provider !== 'apple' && provider !== 'kakao') {
         return res.status(400).json({
           success: false,
-          message: 'provider는 apple 또는 google이어야 합니다',
+          message: 'provider는 apple 또는 kakao여야 합니다',
           error: 'INVALID_PROVIDER'
         });
       }
