@@ -36,7 +36,6 @@ export default function ProfilePage() {
   const {
     data: reportData,
     isLoading: reportLoading,
-    error: reportError,
   } = useQuery({
     queryKey: ['onboarding-report', user?.id],
     queryFn: async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Radar,
   RadarChart,
@@ -8,7 +8,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   ResponsiveContainer,
-  Legend,
   Tooltip,
 } from 'recharts';
 import {
@@ -34,7 +33,6 @@ export default function OnboardingReportPage() {
   const [report, setReport] = useState<OnboardingReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<number>(0);
 
   useEffect(() => {
     loadReport();
@@ -698,7 +696,7 @@ export default function OnboardingReportPage() {
           </motion.p>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {recommendedBooks.map((book, index) => (
+            {recommendedBooks.map((book) => (
               <motion.div
                 key={book.bookId}
                 className="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 group"

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOnboardingGenres, getGenreBooks, saveUserPreferences } from '../lib/onboardingApi';
+import api from '../lib/api';
 import type { Genre, OnboardingBook, ReadingPreferences } from '../types/onboarding';
 import {
   pageVariants,
