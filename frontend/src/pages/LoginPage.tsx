@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import AppleLogo from '../components/icons/AppleLogo';
+import KakaoLogo from '../components/icons/KakaoLogo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ export default function LoginPage() {
                 placeholder="아이디 입력"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-b-2 border-border-color focus:outline-none focus:border-ios-green placeholder:text-text-secondary"
+                className="w-full px-2 py-3 bg-transparent border-b-2 border-text-secondary/30 focus:outline-none focus:border-ios-green placeholder:text-text-secondary/60 transition-colors text-text-primary"
                 required
               />
             </div>
@@ -85,7 +86,7 @@ export default function LoginPage() {
                 placeholder="비밀번호 입력"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-b-2 border-border-color focus:outline-none focus:border-ios-green placeholder:text-text-secondary"
+                className="w-full px-2 py-3 bg-transparent border-b-2 border-text-secondary/30 focus:outline-none focus:border-ios-green placeholder:text-text-secondary/60 transition-colors text-text-primary"
                 required
               />
             </div>
@@ -144,26 +145,23 @@ export default function LoginPage() {
               type="button"
               onClick={handleAppleLogin}
               disabled={socialLoading}
-              className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-3 hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black text-white py-3 rounded-lg font-medium relative flex items-center justify-center hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ minHeight: '44px' }}
             >
-              <AppleLogo className="w-5 h-5" />
+              <AppleLogo className="w-5 h-5 absolute left-4" />
               <span className="text-base">Apple로 로그인</span>
             </button>
 
-            {/* Kakao 로그인 - 공식 리소스 사용 */}
+            {/* Kakao 로그인 - 공식 색상 사용 */}
             <button
               type="button"
               onClick={handleKakaoLogin}
               disabled={socialLoading}
-              className="w-full flex items-center justify-center overflow-hidden rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ height: '44px' }}
+              className="w-full py-3 rounded-lg font-medium relative flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ minHeight: '44px', backgroundColor: '#FEE500', color: '#000000' }}
             >
-              <img
-                src="/images/kakao/kakao_login_medium_wide.png"
-                alt="카카오 로그인"
-                className="w-full h-full object-cover"
-              />
+              <KakaoLogo className="w-5 h-5 absolute left-4" />
+              <span className="text-base font-medium">카카오 로그인</span>
             </button>
           </div>
         </div>
