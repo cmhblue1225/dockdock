@@ -242,10 +242,34 @@ export default function OnboardingPagePremium() {
         preferred_themes: Array.from(preferredThemes),
       };
 
+      // 1. 선호도 저장
       await saveUserPreferences(preferences);
 
-      // 온보딩 완료 후 홈으로 이동
-      navigate('/');
+      // 2. 레포트 생성 (백엔드 API 호출)
+      try {
+        const reportData = {
+          purposes: Array.from(readingPurposes),
+          favorite_genres: Array.from(selectedGenres),
+          preferred_length: preferredLength || undefined,
+          reading_pace: readingPace || undefined,
+          preferred_difficulty: preferredDifficulty || undefined,
+          preferred_moods: Array.from(preferredMoods),
+          preferred_emotions: Array.from(preferredEmotions),
+          preferred_narrative_styles: Array.from(narrativeStyles),
+          preferred_themes: Array.from(preferredThemes),
+        };
+
+        await api.post('/api/v1/onboarding/report/generate', {
+          onboardingData: reportData,
+        });
+
+        // 레포트 페이지로 이동
+        navigate('/onboarding/report');
+      } catch (reportErr) {
+        console.error('레포트 생성 실패:', reportErr);
+        // 레포트 생성 실패해도 홈으로 이동 (선호도는 저장됨)
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || '선호도 저장에 실패했습니다');
       setStep('theme');

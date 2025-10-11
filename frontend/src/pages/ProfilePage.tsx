@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../lib/api';
 import Button from '../components/ui/Button';
 import { useAuthStore } from '../stores/authStore';
 import { useToast } from '../hooks/useToast';
+import { cardVariants } from '../lib/animations';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -28,6 +30,28 @@ export default function ProfilePage() {
     },
   });
 
+  // 온보딩 레포트 조회
+  const {
+    data: reportData,
+    isLoading: reportLoading,
+    error: reportError,
+  } = useQuery({
+    queryKey: ['onboarding-report', user?.id],
+    queryFn: async () => {
+      try {
+        const response = await api.get('/api/v1/onboarding/report');
+        return response.data.data;
+      } catch (error: any) {
+        // 404는 에러가 아니라 레포트가 없다는 의미
+        if (error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    enabled: !!user?.id,
+  });
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -38,8 +62,23 @@ export default function ProfilePage() {
     }
   };
 
+  const handleViewReport = () => {
+    navigate('/onboarding/report');
+  };
+
+  const handleResetOnboarding = () => {
+    if (
+      window.confirm(
+        '온보딩을 다시 진행하시겠습니까?\n새로운 독서 성향 분석을 받을 수 있습니다.'
+      )
+    ) {
+      navigate('/onboarding');
+    }
+  };
+
   const stats = statsData || { reading: 0, completed: 0, wishlist: 0 };
   const totalBooks = stats.reading + stats.completed + stats.wishlist;
+  const hasReport = !!reportData;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface via-surface-light to-surface">
@@ -119,6 +158,104 @@ export default function ProfilePage() {
             </>
           )}
         </div>
+
+        {/* 온보딩 레포트 */}
+        <motion.div
+          className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-custom"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          whileHover="hover"
+        >
+          <h2 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
+            <span>📊</span>
+            <span>독서 성향 분석</span>
+          </h2>
+
+          {reportLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-ios-green"></div>
+            </div>
+          ) : hasReport ? (
+            <div className="space-y-4">
+              {/* 레포트 요약 카드 */}
+              <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-200">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="text-5xl">{reportData.persona?.icon || '🌌'}</div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-purple-900 mb-1">
+                      {reportData.persona?.title || '당신의 독서 페르소나'}
+                    </h3>
+                    <p className="text-purple-700 text-sm">
+                      {reportData.persona?.subtitle || '독서 성향이 분석되었습니다'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 핵심 특징 */}
+                {reportData.persona?.keyTraits && reportData.persona.keyTraits.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-purple-800 mb-2">핵심 특징:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {reportData.persona.keyTraits.slice(0, 3).map((trait: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-white/70 rounded-full text-xs text-purple-700 border border-purple-200"
+                        >
+                          {trait}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-purple-600 mb-4">
+                  생성일: {new Date(reportData.createdAt).toLocaleDateString('ko-KR')}
+                </p>
+
+                <Button
+                  onClick={handleViewReport}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                >
+                  <span className="mr-2">📖</span>
+                  전체 레포트 보기
+                </Button>
+              </div>
+
+              {/* 온보딩 재설정 */}
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-sm text-text-secondary mb-3">
+                  독서 취향이 변했나요? 온보딩을 다시 진행하여 새로운 분석을 받아보세요.
+                </p>
+                <Button
+                  onClick={handleResetOnboarding}
+                  variant="outline"
+                  className="w-full text-purple-600 border-purple-300 hover:bg-purple-50"
+                >
+                  <span className="mr-2">🔄</span>
+                  온보딩 다시하기
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-xl font-bold text-text-primary mb-2">
+                아직 독서 성향 분석을 받지 않았어요
+              </h3>
+              <p className="text-text-secondary mb-6">
+                온보딩을 통해 당신만의 독서 DNA를 발견하세요
+              </p>
+              <Button
+                onClick={() => navigate('/onboarding')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8"
+              >
+                <span className="mr-2">✨</span>
+                온보딩 시작하기
+              </Button>
+            </div>
+          )}
+        </motion.div>
 
         {/* 계정 관리 */}
         <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-custom">

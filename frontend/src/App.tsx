@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import OnboardingPagePremium from './pages/OnboardingPagePremium';
+import OnboardingReportPage from './pages/OnboardingReportPage';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import SearchPage from './pages/SearchPage';
@@ -56,6 +57,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <OnboardingPagePremium />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 온보딩 레포트 라우트 - 인증 필요, Layout 불필요 */}
+          <Route
+            path="/onboarding/report"
+            element={
+              <ProtectedRoute>
+                <OnboardingReportPage />
               </ProtectedRoute>
             }
           />

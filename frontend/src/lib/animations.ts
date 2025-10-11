@@ -409,3 +409,312 @@ export const fastTransition = {
   duration: 0.3,
   ease: 'easeOut' as const,
 };
+
+/**
+ * ============================================
+ * 🎭 고급 애니메이션 (Phase 2)
+ * ============================================
+ */
+
+/**
+ * 3D Card Flip 애니메이션
+ */
+export const cardFlipVariants: Variants = {
+  front: {
+    rotateY: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+  back: {
+    rotateY: 180,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+/**
+ * 3D Depth 레이어 (Parallax)
+ */
+export const parallaxLayerVariants = {
+  background: {
+    y: 0,
+    transition: {
+      duration: 0,
+    },
+  },
+  foreground: {
+    y: 0,
+    transition: {
+      duration: 0,
+    },
+  },
+};
+
+/**
+ * Magnetic Hover 효과 (마우스 끌어당김)
+ */
+export const magneticVariants: Variants = {
+  initial: {
+    x: 0,
+    y: 0,
+  },
+  hover: {
+    scale: 1.1,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
+/**
+ * Ripple Effect (물결 효과)
+ */
+export const rippleVariants: Variants = {
+  initial: {
+    opacity: 1,
+    scale: 0,
+  },
+  animate: {
+    opacity: 0,
+    scale: 2.5,
+    transition: {
+      duration: 0.6,
+      ease: 'easeOut',
+    },
+  },
+};
+
+/**
+ * Morph Animation (형태 변환)
+ */
+export const morphVariants: Variants = {
+  circle: {
+    borderRadius: '50%',
+    transition: {
+      type: 'spring',
+      stiffness: 200,
+      damping: 20,
+    },
+  },
+  square: {
+    borderRadius: '0%',
+    transition: {
+      type: 'spring',
+      stiffness: 200,
+      damping: 20,
+    },
+  },
+  rounded: {
+    borderRadius: '24px',
+    transition: {
+      type: 'spring',
+      stiffness: 200,
+      damping: 20,
+    },
+  },
+};
+
+/**
+ * Float Animation (떠다니기)
+ */
+export const floatVariants: Variants = {
+  animate: {
+    y: [0, -10, 0],
+    transition: {
+      duration: 3,
+      ease: 'easeInOut',
+      repeat: Infinity,
+    },
+  },
+};
+
+/**
+ * Bounce 효과 (튕김)
+ */
+export const bounceVariants: Variants = {
+  initial: {
+    scale: 1,
+  },
+  bounce: {
+    scale: [1, 1.2, 0.9, 1.1, 1],
+    transition: {
+      duration: 0.6,
+      times: [0, 0.2, 0.5, 0.8, 1],
+    },
+  },
+};
+
+/**
+ * Shake 효과 (흔들림)
+ */
+export const shakeVariants: Variants = {
+  animate: {
+    x: [0, -10, 10, -10, 10, 0],
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
+/**
+ * Stagger Grid (그리드 순차 등장)
+ */
+export const staggerGridContainerVariants: Variants = {
+  hidden: {
+    opacity: 0,
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+/**
+ * Zoom In/Out
+ */
+export const zoomVariants: Variants = {
+  initial: {
+    scale: 0,
+    opacity: 0,
+  },
+  animate: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 200,
+      damping: 15,
+    },
+  },
+  exit: {
+    scale: 0,
+    opacity: 0,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
+
+/**
+ * Reveal Animation (커튼 효과)
+ */
+export const revealVariants: Variants = {
+  hidden: {
+    clipPath: 'inset(0 100% 0 0)',
+  },
+  visible: {
+    clipPath: 'inset(0 0% 0 0)',
+    transition: {
+      duration: 0.8,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+/**
+ * Blur In/Out
+ */
+export const blurVariants: Variants = {
+  initial: {
+    opacity: 0,
+    filter: 'blur(10px)',
+  },
+  animate: {
+    opacity: 1,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 0.5,
+    },
+  },
+  exit: {
+    opacity: 0,
+    filter: 'blur(10px)',
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
+
+/**
+ * Rotate & Scale
+ */
+export const rotateScaleVariants: Variants = {
+  initial: {
+    rotate: -180,
+    scale: 0,
+    opacity: 0,
+  },
+  animate: {
+    rotate: 0,
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 150,
+      damping: 20,
+    },
+  },
+};
+
+/**
+ * Typewriter 효과용 transition
+ */
+export const typewriterTransition = {
+  duration: 0.05,
+  ease: 'linear' as const,
+};
+
+/**
+ * Elastic 효과
+ */
+export const elasticTransition = {
+  type: 'spring' as const,
+  stiffness: 300,
+  damping: 10,
+};
+
+/**
+ * Smooth Elastic (덜 강한 elastic)
+ */
+export const smoothElasticTransition = {
+  type: 'spring' as const,
+  stiffness: 200,
+  damping: 15,
+};
+
+/**
+ * 3D Perspective 설정 (부모 요소에 적용)
+ */
+export const perspective3D = {
+  perspective: 1000,
+  perspectiveOrigin: 'center',
+  transformStyle: 'preserve-3d' as const,
+};
+
+/**
+ * Particle Burst Effect용 위치 계산
+ */
+export const getParticleBurstPosition = (index: number, total: number) => {
+  const angle = (index / total) * Math.PI * 2;
+  const distance = 50 + Math.random() * 50;
+  return {
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance,
+  };
+};
+
+/**
+ * Stagger Delay 계산 (커스텀)
+ */
+export const getStaggerDelay = (index: number, staggerTime: number = 0.08): number => {
+  return index * staggerTime;
+};
