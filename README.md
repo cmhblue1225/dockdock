@@ -255,7 +255,7 @@ request.addValue("Bearer \(accessToken)",
 자세한 배포 가이드는 [DEPLOYMENT.md](./DEPLOYMENT.md) 또는 [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md) 참고
 
 **배포 아키텍처:**
-```
+```d
 Netlify (프론트엔드) → Render (백엔드 API)
 ```
 
