@@ -22,8 +22,15 @@ export function useToast() {
 
       // 닫기 함수
       const handleClose = () => {
-        root.unmount();
-        document.body.removeChild(toastContainer);
+        try {
+          root.unmount();
+          if (toastContainer.parentNode) {
+            document.body.removeChild(toastContainer);
+          }
+        } catch (error) {
+          // 이미 제거된 경우 무시
+          console.debug('Toast already removed');
+        }
       };
 
       // 토스트 렌더링
