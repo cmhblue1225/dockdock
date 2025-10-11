@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/authStore';
+import api from '../../lib/api';
 
 interface NavItem {
   path: string;
@@ -17,6 +19,21 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const location = useLocation();
   const { user, signOut } = useAuthStore();
+
+  // 현재 읽는 중인 책 조회
+  const { data: readingBooksData } = useQuery({
+    queryKey: ['reading-books', 'reading'],
+    queryFn: async () => {
+      const response = await api.get('/api/v1/reading-books', {
+        params: { status: 'reading', limit: 1 }
+      });
+      return response.data;
+    },
+    enabled: !!user,
+  });
+
+  const currentBook = readingBooksData?.data?.[0];
+  const progressPercent = currentBook?.progress_percent || 0;
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -65,31 +82,47 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Continue Reading Widget (임시 - 나중에 실제 데이터 연결) */}
+      {/* Continue Reading Widget */}
       <div className="bg-gradient-to-br from-surface to-surface-light rounded-2xl p-4 mb-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-custom">
         <div className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">
           계속 읽기
         </div>
 
-        <div className="flex gap-3 mb-4">
-          <div className="w-14 h-20 bg-gradient-to-br from-ios-green to-ios-green-dark rounded-lg flex items-center justify-center text-2xl shadow-custom">
-            📖
-          </div>
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="text-sm font-semibold text-text-primary mb-1 line-clamp-2">
-              독서 중인 책
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-border-gray rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-ios-green rounded-full transition-all duration-500"
-                  style={{ width: '42%' }}
-                />
+        {currentBook ? (
+          <div className="flex gap-3">
+            {currentBook.book?.cover_image_url ? (
+              <img
+                src={currentBook.book.cover_image_url}
+                alt={currentBook.book.title}
+                className="w-14 h-20 object-cover rounded-lg shadow-custom"
+              />
+            ) : (
+              <div className="w-14 h-20 bg-gradient-to-br from-ios-green to-ios-green-dark rounded-lg flex items-center justify-center text-2xl shadow-custom">
+                📖
               </div>
-              <span className="text-xs font-semibold text-ios-green">42%</span>
+            )}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="text-sm font-semibold text-text-primary mb-1 line-clamp-2">
+                {currentBook.book?.title || '제목 없음'}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-border-gray rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-ios-green rounded-full transition-all duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-ios-green">
+                  {Math.round(progressPercent)}%
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-sm text-text-secondary text-center py-4">
+            독서 중인 책이 없습니다
+          </div>
+        )}
       </div>
 
       {/* User Profile Widget */}
