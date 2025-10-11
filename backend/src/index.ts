@@ -13,6 +13,8 @@ import readingRoutes from './routes/reading.routes';
 import recordRoutes from './routes/record.routes';
 import reviewRoutes from './routes/review.routes';
 import photoRoutes from './routes/photo.routes';
+import recommendationRoutes from './routes/recommendation.routes';
+import onboardingRoutes from './routes/onboarding.routes';
 // TODO: 추가 라우트
 // import aiRoutes from './routes/ai.routes';
 
@@ -104,6 +106,8 @@ app.use('/api/v1/reading-books', readingRoutes);
 app.use('/api/v1/reading-records', recordRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/photos', photoRoutes);
+app.use('/api/v1/recommendations', recommendationRoutes);
+app.use('/api/v1/onboarding', onboardingRoutes);
 
 // TODO: 추가 라우트 등록
 // app.use('/api/ai', aiRoutes);

@@ -1,4 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+// 환경 변수 로드 (다른 모듈이 먼저 import할 때를 대비)
+dotenv.config();
 
 /**
  * Supabase Admin 클라이언트 (Service Role Key 사용)

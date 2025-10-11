@@ -37,8 +37,8 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password, displayName);
-      // 회원가입 성공 시 홈으로 이동
-      navigate('/');
+      // 회원가입 성공 시 온보딩으로 이동
+      navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || '회원가입에 실패했습니다');
     } finally {

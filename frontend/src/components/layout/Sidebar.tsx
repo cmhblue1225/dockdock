@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
@@ -19,8 +19,19 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 로그아웃 핸들러
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
+  };
 
   // 현재 읽는 중인 책 조회 (최대 5권)
   const { data: readingBooksData } = useQuery({
@@ -217,7 +228,7 @@ export default function Sidebar() {
               {user?.email?.split('@')[0] || '독서러버'}
             </div>
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               className="text-xs text-text-secondary hover:text-ios-green transition-colors"
             >
               로그아웃

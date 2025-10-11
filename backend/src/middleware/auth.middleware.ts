@@ -110,3 +110,8 @@ export const optionalAuthMiddleware = async (
     next();
   }
 };
+
+/**
+ * authenticate 별칭 (다른 라우트와의 호환성을 위함)
+ */
+export const authenticate = authMiddleware;
