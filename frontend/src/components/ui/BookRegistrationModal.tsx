@@ -66,9 +66,11 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
 
     try {
       // 1. 먼저 books 테이블에 책 등록 (이미 있으면 기존 ID 반환)
-      let bookId = book.id;
+      let bookId: string;
 
-      if (!bookId) {
+      if (book.id) {
+        bookId = book.id;
+      } else {
         const bookResult = await createBookMutation.mutateAsync(book);
         bookId = bookResult.data.id;
       }

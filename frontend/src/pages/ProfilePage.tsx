@@ -7,7 +7,7 @@ import { useToast } from '../hooks/useToast';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const { showToast } = useToast();
 
   // 전체 통계 조회
@@ -30,7 +30,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       showToast('로그아웃되었습니다', 'success');
       navigate('/login');
     } catch (error) {

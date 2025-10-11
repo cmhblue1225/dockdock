@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import Toast, { ToastProps } from '../components/ui/Toast';
 import { createRoot } from 'react-dom/client';
 
@@ -20,15 +20,18 @@ export function useToast() {
       toastContainer.className = 'fixed top-4 right-4 z-50';
       document.body.appendChild(toastContainer);
 
-      // 토스트 렌더링
-      const root = createRoot(toastContainer);
-      root.render(<Toast message={message} type={type} duration={duration} />);
-
-      // duration 후 제거
-      setTimeout(() => {
+      // 닫기 함수
+      const handleClose = () => {
         root.unmount();
         document.body.removeChild(toastContainer);
-      }, duration + 500); // 애니메이션 시간 고려
+      };
+
+      // 토스트 렌더링
+      const root = createRoot(toastContainer);
+      root.render(<Toast message={message} type={type} duration={duration} onClose={handleClose} />);
+
+      // duration 후 제거 (안전장치)
+      setTimeout(handleClose, duration + 500); // 애니메이션 시간 고려
     },
     []
   );
