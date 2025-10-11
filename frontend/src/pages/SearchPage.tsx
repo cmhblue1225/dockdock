@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { getPersonalizedRecommendations, getTrendingBooks } from '../lib/recommendationApi';
 import BookRegistrationModal from '../components/ui/BookRegistrationModal';
@@ -19,7 +18,6 @@ interface Book {
 }
 
 export default function SearchPage() {
-  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
