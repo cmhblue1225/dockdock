@@ -15,7 +15,7 @@ export const booksController = {
   /**
    * 책 검색 (제목, 저자 등)
    *
-   * GET /api/books/search?query=클린코드&queryType=Title&maxResults=10
+   * GET /api/v1/books/search?query=클린코드&queryType=Title&maxResults=10
    */
   searchBooks: async (req: Request, res: Response) => {
     try {
@@ -87,7 +87,7 @@ export const booksController = {
   /**
    * ISBN으로 책 검색 (독서 중인 책 등록용)
    *
-   * GET /api/books/isbn/{isbn}
+   * GET /api/v1/books/isbn/{isbn}
    *
    * 사용 시나리오:
    * 1. 사용자가 바코드 스캔 또는 ISBN 입력
@@ -138,7 +138,7 @@ export const booksController = {
   /**
    * 책 상세 정보 조회 (알라딘 상품 ID)
    *
-   * GET /api/books/{bookId}
+   * GET /api/v1/books/{bookId}
    */
   getBookDetail: async (req: Request, res: Response) => {
     try {
@@ -183,8 +183,8 @@ export const booksController = {
   /**
    * 통합 검색 (제목 또는 ISBN)
    *
-   * GET /api/books?search=클린코드
-   * GET /api/books?search=9788966260959
+   * GET /api/v1/books?search=클린코드
+   * GET /api/v1/books?search=9788966260959
    *
    * 사용자 입력이 ISBN인지 제목인지 자동 판별하여 검색
    * 독서 관리 앱의 메인 검색 기능으로 사용
@@ -264,7 +264,7 @@ export const booksController = {
   /**
    * 책을 데이터베이스에 저장
    *
-   * POST /api/books
+   * POST /api/v1/books
    *
    * 검색된 책을 books 테이블에 저장하고 book_id를 반환
    * 중복 체크: isbn13이 이미 있으면 기존 책 정보 반환

@@ -101,7 +101,7 @@ app.get('/health', (_req: Request, res: Response) => {
 // ============================================
 
 app.use('/api/auth', authRoutes);
-app.use('/api/books', booksRoutes);
+app.use('/api/v1/books', booksRoutes);
 app.use('/api/v1/reading-books', readingRoutes);
 app.use('/api/v1/reading-records', recordRoutes);
 app.use('/api/v1/reviews', reviewRoutes);

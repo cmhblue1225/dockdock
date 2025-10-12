@@ -93,7 +93,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/books/search:
+ * /api/v1/books/search:
  *   get:
  *     summary: 책 검색 (제목, 저자 등)
  *     description: 사용자가 입력한 검색어로 책을 검색합니다
@@ -148,7 +148,7 @@ router.get('/search', booksController.searchBooks);
 
 /**
  * @swagger
- * /api/books/isbn/{isbn}:
+ * /api/v1/books/isbn/{isbn}:
  *   get:
  *     summary: ISBN으로 책 검색
  *     description: |
@@ -177,7 +177,7 @@ router.get('/isbn/:isbn', booksController.searchByISBN);
 
 /**
  * @swagger
- * /api/books/{bookId}:
+ * /api/v1/books/{bookId}:
  *   get:
  *     summary: 책 상세 정보 조회
  *     description: 알라딘 상품 ID로 책의 상세 정보를 조회합니다
@@ -204,7 +204,7 @@ router.get('/:bookId', booksController.getBookDetail);
 
 /**
  * @swagger
- * /api/books:
+ * /api/v1/books:
  *   post:
  *     summary: 책을 데이터베이스에 저장
  *     description: |
@@ -270,7 +270,7 @@ router.post('/', booksController.createBook);
 
 /**
  * @swagger
- * /api/books:
+ * /api/v1/books:
  *   get:
  *     summary: 통합 검색 (제목 또는 ISBN 자동 판별)
  *     description: |
