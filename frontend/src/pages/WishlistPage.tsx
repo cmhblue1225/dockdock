@@ -137,18 +137,63 @@ export default function WishlistPage() {
       </div>
 
       {/* 책 상세 모달 (위시리스트용) */}
-      {selectedBook && selectedBook.book.aladin_id && (
-        <BookDetailModal
-          bookId={selectedBook.book.aladin_id}
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedBook(null);
-          }}
-          readingBookId={selectedBook.id}
-          showDeleteButton={true}
-          onDelete={handleDelete}
-        />
+      {selectedBook && (
+        <>
+          {selectedBook.book.aladin_id ? (
+            <BookDetailModal
+              bookId={selectedBook.book.aladin_id}
+              isOpen={isDetailModalOpen}
+              onClose={() => {
+                setIsDetailModalOpen(false);
+                setSelectedBook(null);
+              }}
+              showDeleteButton={true}
+              onDelete={handleDelete}
+            />
+          ) : (
+            /* aladin_id가 없는 경우 기본 모달 표시 */
+            isDetailModalOpen && (
+              <div className="fixed inset-0 z-50 overflow-y-auto">
+                <div className="flex min-h-full items-center justify-center p-4">
+                  <div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+                    onClick={() => {
+                      setIsDetailModalOpen(false);
+                      setSelectedBook(null);
+                    }}
+                  />
+                  <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 z-10">
+                    <h3 className="text-xl font-bold text-text-primary mb-4">
+                      {selectedBook.book.title}
+                    </h3>
+                    <p className="text-text-secondary mb-6">
+                      이 책은 상세 정보를 불러올 수 없습니다.
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => {
+                          setIsDetailModalOpen(false);
+                          setSelectedBook(null);
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        닫기
+                      </Button>
+                      <Button
+                        onClick={handleDelete}
+                        variant="outline"
+                        className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        삭제
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </>
       )}
     </div>
   );
