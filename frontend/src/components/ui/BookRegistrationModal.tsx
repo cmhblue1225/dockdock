@@ -26,7 +26,7 @@ type ReadingStatus = 'wishlist' | 'reading';
 
 export default function BookRegistrationModal({ isOpen, onClose, book }: BookRegistrationModalProps) {
   const [status, setStatus] = useState<ReadingStatus>('wishlist');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState<number | ''>('');
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -78,7 +78,7 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
         book_id: bookId,
         status,
         total_pages: book.pageCount || null,
-        ...(status === 'reading' && currentPage > 0 && { current_page: currentPage }),
+        ...(status === 'reading' && typeof currentPage === 'number' && currentPage > 0 && { current_page: currentPage }),
       });
     } catch (error) {
       console.error('Registration error:', error);
@@ -87,7 +87,7 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
 
   const handleClose = () => {
     setStatus('wishlist');
-    setCurrentPage(0);
+    setCurrentPage('');
     onClose();
   };
 
@@ -161,11 +161,14 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
               min="0"
               max={book.pageCount || undefined}
               value={currentPage}
-              onChange={(e) => setCurrentPage(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCurrentPage(value === '' ? '' : parseInt(value));
+              }}
               placeholder="0"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent"
             />
-            {book.pageCount && currentPage > 0 && (
+            {book.pageCount && typeof currentPage === 'number' && currentPage > 0 && (
               <p className="text-xs text-text-secondary mt-2">
                 진행률: {Math.round((currentPage / book.pageCount) * 100)}%
               </p>
