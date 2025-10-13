@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import BookCard from '../components/ui/BookCard';
 import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
+import BookDetailModal from '../components/BookDetailModal';
 import { useToast } from '../hooks/useToast';
 
 interface ReadingBookWithBook {
@@ -24,12 +24,13 @@ interface ReadingBookWithBook {
     publisher: string | null;
     cover_image_url: string | null;
     page_count: number | null;
+    aladin_id: string | null;
   };
 }
 
 export default function WishlistPage() {
   const [selectedBook, setSelectedBook] = useState<ReadingBookWithBook | null>(null);
-  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -44,26 +45,6 @@ export default function WishlistPage() {
     },
   });
 
-  // 상태 변경 (위시리스트 → 읽기 시작)
-  const startReadingMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await api.patch(`/api/v1/reading-books/${id}`, {
-        status: 'reading',
-        current_page: 0,
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reading-books'] });
-      showToast('읽기를 시작했습니다!', 'success');
-      setIsActionModalOpen(false);
-      setSelectedBook(null);
-    },
-    onError: () => {
-      showToast('상태 변경에 실패했습니다', 'error');
-    },
-  });
-
   // 삭제
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -73,7 +54,7 @@ export default function WishlistPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reading-books'] });
       showToast('위시리스트에서 삭제되었습니다', 'success');
-      setIsActionModalOpen(false);
+      setIsDetailModalOpen(false);
       setSelectedBook(null);
     },
     onError: () => {
@@ -83,23 +64,16 @@ export default function WishlistPage() {
 
   const handleBookClick = (book: ReadingBookWithBook) => {
     setSelectedBook(book);
-    setIsActionModalOpen(true);
-  };
-
-  const handleStartReading = () => {
-    if (selectedBook) {
-      startReadingMutation.mutate(selectedBook.id);
-    }
+    setIsDetailModalOpen(true);
   };
 
   const handleDelete = () => {
-    if (selectedBook) {
+    if (selectedBook && confirm('위시리스트에서 삭제하시겠습니까?')) {
       deleteMutation.mutate(selectedBook.id);
     }
   };
 
   const books = data?.data?.items || [];
-  const isProcessing = startReadingMutation.isPending || deleteMutation.isPending;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface via-surface-light to-surface">
@@ -162,71 +136,20 @@ export default function WishlistPage() {
         )}
       </div>
 
-      {/* 액션 모달 */}
-      <Modal
-        isOpen={isActionModalOpen}
-        onClose={() => {
-          if (!isProcessing) {
-            setIsActionModalOpen(false);
+      {/* 책 상세 모달 (위시리스트용) */}
+      {selectedBook && selectedBook.book.aladin_id && (
+        <BookDetailModal
+          bookId={selectedBook.book.aladin_id}
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
             setSelectedBook(null);
-          }
-        }}
-        title="책 관리"
-        size="md"
-      >
-        {selectedBook && (
-          <div className="space-y-6">
-            {/* 책 정보 */}
-            <div className="flex gap-4">
-              <img
-                src={selectedBook.book.cover_image_url || '/placeholder-book.png'}
-                alt={selectedBook.book.title}
-                className="w-24 h-32 object-cover rounded-lg shadow-sm"
-              />
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-text-primary mb-1">
-                  {selectedBook.book.title}
-                </h3>
-                {selectedBook.book.author && (
-                  <p className="text-text-secondary text-sm mb-1">{selectedBook.book.author}</p>
-                )}
-                {selectedBook.book.publisher && (
-                  <p className="text-text-secondary text-sm">{selectedBook.book.publisher}</p>
-                )}
-                {selectedBook.book.page_count && (
-                  <p className="text-text-secondary text-sm mt-2">
-                    총 {selectedBook.book.page_count}페이지
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* 액션 버튼 */}
-            <div className="space-y-3 pt-4">
-              <Button
-                onClick={handleStartReading}
-                variant="primary"
-                className="w-full"
-                isLoading={startReadingMutation.isPending}
-                disabled={isProcessing}
-              >
-                <span className="mr-2">📖</span>
-                읽기 시작하기
-              </Button>
-              <Button
-                onClick={handleDelete}
-                variant="outline"
-                className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                isLoading={deleteMutation.isPending}
-                disabled={isProcessing}
-              >
-                <span className="mr-2">🗑️</span>
-                위시리스트에서 삭제
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          }}
+          readingBookId={selectedBook.id}
+          showDeleteButton={true}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

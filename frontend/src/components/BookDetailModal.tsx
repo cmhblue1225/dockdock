@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, BookOpen, Calendar, FileText } from 'lucide-react';
+import { X, Heart, BookOpen, Calendar, FileText, Trash2 } from 'lucide-react';
 import api from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
@@ -8,6 +8,9 @@ interface BookDetailModalProps {
   bookId: string;
   isOpen: boolean;
   onClose: () => void;
+  readingBookId?: string; // 위시리스트/읽는중/완독에서 호출 시 전달
+  showDeleteButton?: boolean; // 삭제 버튼 표시 여부
+  onDelete?: () => void; // 삭제 콜백
 }
 
 interface BookDetail {
@@ -33,7 +36,7 @@ interface BookDetail {
   rating: number;
 }
 
-export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailModalProps) {
+export default function BookDetailModal({ bookId, isOpen, onClose, readingBookId, showDeleteButton = false, onDelete }: BookDetailModalProps) {
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -246,35 +249,51 @@ export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailM
                         </div>
 
                         {/* Action Buttons */}
-                        <motion.button
-                          onClick={handleStartReading}
-                          disabled={isStartingReading || startedReading}
-                          className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                            startedReading
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                          whileHover={{ scale: startedReading ? 1 : 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <BookOpen className="w-5 h-5" />
-                          {startedReading ? '읽기 시작됨!' : isStartingReading ? '처리 중...' : '읽기 시작하기'}
-                        </motion.button>
+                        {!showDeleteButton && (
+                          <>
+                            <motion.button
+                              onClick={handleStartReading}
+                              disabled={isStartingReading || startedReading}
+                              className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                                startedReading
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              whileHover={{ scale: startedReading ? 1 : 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <BookOpen className="w-5 h-5" />
+                              {startedReading ? '읽기 시작됨!' : isStartingReading ? '처리 중...' : '읽기 시작하기'}
+                            </motion.button>
 
-                        <motion.button
-                          onClick={handleAddToWishlist}
-                          disabled={isAddingToWishlist || addedToWishlist}
-                          className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                            addedToWishlist
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                          whileHover={{ scale: addedToWishlist ? 1 : 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Heart className={addedToWishlist ? 'fill-current' : ''} />
-                          {addedToWishlist ? '위시리스트에 추가됨!' : isAddingToWishlist ? '추가 중...' : '위시리스트에 추가'}
-                        </motion.button>
+                            <motion.button
+                              onClick={handleAddToWishlist}
+                              disabled={isAddingToWishlist || addedToWishlist}
+                              className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                                addedToWishlist
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              whileHover={{ scale: addedToWishlist ? 1 : 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Heart className={addedToWishlist ? 'fill-current' : ''} />
+                              {addedToWishlist ? '위시리스트에 추가됨!' : isAddingToWishlist ? '추가 중...' : '위시리스트에 추가'}
+                            </motion.button>
+                          </>
+                        )}
+
+                        {showDeleteButton && onDelete && (
+                          <motion.button
+                            onClick={onDelete}
+                            className="w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 bg-red-600 text-white hover:bg-red-700"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                            위시리스트에서 삭제
+                          </motion.button>
+                        )}
 
                         {book.link && (
                           <a
