@@ -36,7 +36,7 @@ interface BookDetail {
   rating: number;
 }
 
-export default function BookDetailModal({ bookId, isOpen, onClose, readingBookId, showDeleteButton = false, onDelete }: BookDetailModalProps) {
+export default function BookDetailModal({ bookId, isOpen, onClose, showDeleteButton = false, onDelete }: BookDetailModalProps) {
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
