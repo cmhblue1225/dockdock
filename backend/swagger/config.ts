@@ -13,8 +13,14 @@ const options: swaggerJsdoc.Options = {
 
 ## 📱 iOS 개발자 가이드
 
-Swift를 사용한 상세한 구현 가이드는 다음 문서를 참고하세요:
-- [Swift 완전 가이드 문서](https://github.com/yourusername/dockdock/blob/main/backend/swagger/swift-guide.md)
+**모든 API 엔드포인트에 Swift 코드 예시가 포함되어 있습니다!**
+
+각 API 섹션을 펼치면 다음을 확인할 수 있습니다:
+- ✅ Swift Service 레이어 구현 예시
+- ✅ SwiftUI ViewModel 패턴
+- ✅ Codable 모델 정의
+- ✅ 에러 처리 방법
+- ✅ 완전한 SwiftUI View 예시
 
 ## 🔐 인증
 
