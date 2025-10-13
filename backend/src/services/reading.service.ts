@@ -27,7 +27,8 @@ export async function getReadingBooks(
         author,
         publisher,
         cover_image_url,
-        page_count
+        page_count,
+        aladin_id
       )
     `,
       { count: 'exact' }
