@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import imageCompression from 'browser-image-compression';
 import api from '../lib/api';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -45,6 +46,14 @@ interface Review {
   updated_at: string;
 }
 
+interface ReadingPhoto {
+  id: string;
+  reading_record_id: string;
+  user_id: string;
+  photo_url: string;
+  created_at: string;
+}
+
 export default function BookDetailPage() {
   const { readingBookId } = useParams<{ readingBookId: string }>();
   const navigate = useNavigate();
@@ -75,8 +84,11 @@ export default function BookDetailPage() {
     review_text: '',
   });
 
-  // 사진 업로드 (추후 구현 예정)
-  const [_selectedFile, setSelectedFile] = useState<File | null>(null);
+  // 사진 업로드
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedRecordForPhoto, setSelectedRecordForPhoto] = useState<string | null>(null);
 
   // 책 정보 조회
   const { data: readingBookData, isLoading: bookLoading } = useQuery({
@@ -185,12 +197,48 @@ export default function BookDetailPage() {
     },
   });
 
-  // 사진 업로드 (추후 구현 예정)
-  // @ts-expect-error - 추후 사진 갤러리 탭에서 사용 예정
-  const _uploadPhotoMutation = useMutation({
+  // 사진 목록 조회 (reading_book에 속한 모든 기록의 사진)
+  const { data: photosData, isLoading: photosLoading } = useQuery({
+    queryKey: ['photos', readingBookId],
+    queryFn: async () => {
+      // reading_book에 속한 모든 기록 가져오기
+      const recordsResponse = await api.get('/api/v1/reading-records', {
+        params: { reading_book_id: readingBookId, limit: 1000 },
+      });
+      const records = recordsResponse.data.data.items || [];
+
+      // 각 기록의 사진 가져오기
+      const allPhotos: ReadingPhoto[] = [];
+      for (const record of records) {
+        try {
+          const photosResponse = await api.get('/api/v1/photos', {
+            params: { reading_record_id: record.id },
+          });
+          if (photosResponse.data.data) {
+            allPhotos.push(...photosResponse.data.data);
+          }
+        } catch (error) {
+          console.error(`Error fetching photos for record ${record.id}:`, error);
+        }
+      }
+      return allPhotos;
+    },
+    enabled: !!readingBookId && activeTab === 'photos',
+  });
+
+  // 사진 업로드
+  const uploadPhotoMutation = useMutation({
     mutationFn: async ({ file, recordId }: { file: File; recordId: string }) => {
+      // 이미지 압축
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('photo', compressedFile);
       formData.append('reading_record_id', recordId);
 
       const response = await api.post('/api/v1/photos', formData, {
@@ -201,12 +249,30 @@ export default function BookDetailPage() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reading-records', readingBookId] });
+      queryClient.invalidateQueries({ queryKey: ['photos', readingBookId] });
       showToast('사진이 업로드되었습니다', 'success');
       setSelectedFile(null);
+      setPhotoPreview(null);
+      setIsPhotoModalOpen(false);
+      setSelectedRecordForPhoto(null);
     },
     onError: (error: any) => {
       const message = error.response?.data?.error?.message || '사진 업로드에 실패했습니다';
+      showToast(message, 'error');
+    },
+  });
+
+  // 사진 삭제
+  const deletePhotoMutation = useMutation({
+    mutationFn: async (photoId: string) => {
+      await api.delete(`/api/v1/photos/${photoId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos', readingBookId] });
+      showToast('사진이 삭제되었습니다', 'success');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error?.message || '사진 삭제에 실패했습니다';
       showToast(message, 'error');
     },
   });
@@ -268,6 +334,36 @@ export default function BookDetailPage() {
     }
 
     completeMutation.mutate();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('이미지 파일만 업로드 가능합니다', 'warning');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('파일 크기는 10MB 이하여야 합니다', 'warning');
+        return;
+      }
+      setSelectedFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadPhoto = () => {
+    if (!selectedFile || !selectedRecordForPhoto) {
+      showToast('사진을 선택해주세요', 'warning');
+      return;
+    }
+    uploadPhotoMutation.mutate({ file: selectedFile, recordId: selectedRecordForPhoto });
+  };
+
+  const handleDeletePhoto = (photoId: string) => {
+    if (confirm('사진을 삭제하시겠습니까?')) {
+      deletePhotoMutation.mutate(photoId);
+    }
   };
 
   const readingBook: ReadingBook | undefined = readingBookData?.data;
@@ -651,9 +747,76 @@ export default function BookDetailPage() {
             )}
 
             {activeTab === 'photos' && (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-3">📷</div>
-                <p className="text-text-secondary">사진 갤러리 기능은 곧 추가될 예정입니다</p>
+              <div className="space-y-6">
+                {/* 사진 업로드 버튼 */}
+                <Button
+                  onClick={() => {
+                    // 첫 번째 기록이 있으면 자동 선택, 없으면 모달에서 선택
+                    if (records.length > 0) {
+                      setSelectedRecordForPhoto(records[0].id);
+                    }
+                    setIsPhotoModalOpen(true);
+                  }}
+                  variant="primary"
+                  className="w-full"
+                  disabled={records.length === 0}
+                >
+                  <span className="mr-2">📷</span>
+                  사진 업로드
+                </Button>
+
+                {records.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <p className="text-sm text-amber-800">
+                      사진을 업로드하려면 먼저 독서 기록을 작성해주세요
+                    </p>
+                  </div>
+                )}
+
+                {/* 사진 갤러리 */}
+                {photosLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-ios-green"></div>
+                  </div>
+                ) : !photosData || photosData.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-5xl mb-3">📷</div>
+                    <p className="text-text-secondary">
+                      아직 업로드한 사진이 없습니다
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {photosData.map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <img
+                          src={photo.photo_url}
+                          alt="독서 사진"
+                          className="w-full aspect-square object-cover"
+                        />
+                        {/* 삭제 버튼 (호버시 표시) */}
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                          disabled={deletePhotoMutation.isPending}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        {/* 날짜 표시 */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                          <p className="text-white text-xs">
+                            {new Date(photo.created_at).toLocaleDateString('ko-KR')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -832,6 +995,125 @@ export default function BookDetailPage() {
               isLoading={completeMutation.isPending}
             >
               완료
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 사진 업로드 모달 */}
+      <Modal
+        isOpen={isPhotoModalOpen}
+        onClose={() => {
+          setIsPhotoModalOpen(false);
+          setSelectedFile(null);
+          setPhotoPreview(null);
+          setSelectedRecordForPhoto(null);
+        }}
+        title="사진 업로드"
+        size="md"
+      >
+        <div className="space-y-6">
+          {/* 사진 선택 */}
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              사진 선택 *
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent"
+            />
+            <p className="text-xs text-text-secondary mt-2">
+              이미지 파일만 가능 (최대 10MB, 자동으로 1MB로 압축됩니다)
+            </p>
+          </div>
+
+          {/* 사진 미리보기 */}
+          {photoPreview && (
+            <div className="relative rounded-xl overflow-hidden shadow-md">
+              <img
+                src={photoPreview}
+                alt="미리보기"
+                className="w-full aspect-video object-cover"
+              />
+              <button
+                onClick={() => {
+                  setSelectedFile(null);
+                  setPhotoPreview(null);
+                }}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-600 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* 기록 선택 */}
+          {records.length > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                연결할 독서 기록 *
+              </label>
+              <select
+                value={selectedRecordForPhoto || ''}
+                onChange={(e) => setSelectedRecordForPhoto(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ios-green focus:border-transparent"
+              >
+                <option value="">기록을 선택하세요</option>
+                {records.map((record) => {
+                  const type = recordTypeLabels[record.record_type];
+                  return (
+                    <option key={record.id} value={record.id}>
+                      {type.icon} {type.label} - {new Date(record.created_at).toLocaleDateString('ko-KR')}
+                      {record.page_number && ` (${record.page_number}p)`}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
+          {records.length === 1 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <p className="text-sm text-text-secondary text-center">
+                사진이 아래 기록에 추가됩니다:
+              </p>
+              <div className="mt-2 text-center">
+                <span className="text-lg">
+                  {recordTypeLabels[records[0].record_type].icon} {recordTypeLabels[records[0].record_type].label}
+                </span>
+                <p className="text-xs text-text-secondary mt-1">
+                  {new Date(records[0].created_at).toLocaleDateString('ko-KR')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 버튼 */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsPhotoModalOpen(false);
+                setSelectedFile(null);
+                setPhotoPreview(null);
+                setSelectedRecordForPhoto(null);
+              }}
+              className="flex-1"
+              disabled={uploadPhotoMutation.isPending}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleUploadPhoto}
+              className="flex-1"
+              isLoading={uploadPhotoMutation.isPending}
+              disabled={!selectedFile || (!selectedRecordForPhoto && records.length > 1)}
+            >
+              업로드
             </Button>
           </div>
         </div>
