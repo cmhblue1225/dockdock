@@ -167,7 +167,10 @@ let record = try await RecordService.shared.createRecord(
       }
     ]
   },
-  apis: ['./src/routes/*.ts'], // 라우트 파일에서 Swagger 주석 읽기
+  // 개발 환경에서는 .ts 파일, 프로덕션에서는 컴파일된 .js 파일 참조
+  apis: process.env.NODE_ENV === 'production'
+    ? ['./dist/backend/src/routes/*.js']  // 프로덕션: 컴파일된 JS 파일
+    : ['./src/routes/*.ts']               // 개발: TypeScript 파일
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
