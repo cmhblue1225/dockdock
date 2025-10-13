@@ -96,7 +96,71 @@ const router = Router();
  * /api/v1/books/search:
  *   get:
  *     summary: 책 검색 (제목, 저자 등)
- *     description: 사용자가 입력한 검색어로 책을 검색합니다
+ *     description: |
+ *       사용자가 입력한 검색어로 책을 검색합니다
+ *
+ *       ## 📱 Swift 코드 예시
+ *
+ *       ```swift
+ *       // MARK: - BookService.swift
+ *
+ *       func searchBooks(query: String, maxResults: Int = 10) async throws -> [Book] {
+ *           var components = URLComponents(string: "\(APIConfig.baseAPIURL)/books/search")
+ *           components?.queryItems = [
+ *               URLQueryItem(name: "query", value: query),
+ *               URLQueryItem(name: "queryType", value: "Title"),
+ *               URLQueryItem(name: "maxResults", value: "\(maxResults)")
+ *           ]
+ *
+ *           guard let url = components?.url else {
+ *               throw APIError.invalidURL
+ *           }
+ *
+ *           var request = URLRequest(url: url)
+ *           request.httpMethod = "GET"
+ *
+ *           let (data, response) = try await URLSession.shared.data(for: request)
+ *
+ *           guard let httpResponse = response as? HTTPURLResponse,
+ *                 (200...299).contains(httpResponse.statusCode) else {
+ *               throw APIError.serverError("Search failed")
+ *           }
+ *
+ *           struct SearchResponse: Codable {
+ *               let books: [Book]
+ *               let totalResults: Int
+ *           }
+ *
+ *           let apiResponse = try JSONDecoder().decode(
+ *               APIResponse<SearchResponse>.self,
+ *               from: data
+ *           )
+ *
+ *           return apiResponse.data?.books ?? []
+ *       }
+ *
+ *       // MARK: - 사용 예시 (SwiftUI)
+ *
+ *       @MainActor
+ *       class BookViewModel: ObservableObject {
+ *           @Published var books: [Book] = []
+ *           @Published var isLoading = false
+ *           @Published var errorMessage: String?
+ *
+ *           func searchBooks(query: String) async {
+ *               isLoading = true
+ *               errorMessage = nil
+ *
+ *               do {
+ *                   books = try await BookService.shared.searchBooks(query: query)
+ *               } catch {
+ *                   errorMessage = error.localizedDescription
+ *               }
+ *
+ *               isLoading = false
+ *           }
+ *       }
+ *       ```
  *     tags: [Books]
  *     parameters:
  *       - in: query
@@ -180,7 +244,99 @@ router.get('/isbn/:isbn', booksController.searchByISBN);
  * /api/v1/books/{bookId}:
  *   get:
  *     summary: 책 상세 정보 조회
- *     description: 알라딘 상품 ID로 책의 상세 정보를 조회합니다
+ *     description: |
+ *       알라딘 상품 ID로 책의 상세 정보를 조회합니다
+ *
+ *       ## 📱 Swift 코드 예시
+ *
+ *       ```swift
+ *       // MARK: - 책 상세 정보 조회
+ *
+ *       func getBookDetail(bookId: String) async throws -> Book {
+ *           guard let url = URL(string: "\(APIConfig.baseAPIURL)/books/\(bookId)") else {
+ *               throw APIError.invalidURL
+ *           }
+ *
+ *           var request = URLRequest(url: url)
+ *           request.httpMethod = "GET"
+ *
+ *           let (data, response) = try await URLSession.shared.data(for: request)
+ *
+ *           guard let httpResponse = response as? HTTPURLResponse,
+ *                 (200...299).contains(httpResponse.statusCode) else {
+ *               throw APIError.serverError("Failed to fetch book detail")
+ *           }
+ *
+ *           let apiResponse = try JSONDecoder().decode(
+ *               APIResponse<Book>.self,
+ *               from: data
+ *           )
+ *
+ *           guard let book = apiResponse.data else {
+ *               throw APIError.noData
+ *           }
+ *
+ *           return book
+ *       }
+ *
+ *       // MARK: - SwiftUI View 예시
+ *
+ *       struct BookDetailView: View {
+ *           let bookId: String
+ *           @State private var book: Book?
+ *           @State private var isLoading = true
+ *           @State private var errorMessage: String?
+ *
+ *           var body: some View {
+ *               Group {
+ *                   if isLoading {
+ *                       ProgressView()
+ *                   } else if let book = book {
+ *                       ScrollView {
+ *                           VStack(alignment: .leading, spacing: 16) {
+ *                               AsyncImage(url: URL(string: book.coverImage ?? "")) { image in
+ *                                   image.resizable()
+ *                               } placeholder: {
+ *                                   Color.gray
+ *                               }
+ *                               .aspectRatio(contentMode: .fit)
+ *                               .frame(maxHeight: 300)
+ *
+ *                               Text(book.title)
+ *                                   .font(.title)
+ *                                   .bold()
+ *
+ *                               Text(book.author ?? "")
+ *                                   .font(.subheadline)
+ *                                   .foregroundColor(.secondary)
+ *
+ *                               Text(book.description ?? "")
+ *                                   .font(.body)
+ *                           }
+ *                           .padding()
+ *                       }
+ *                   } else if let error = errorMessage {
+ *                       Text(error)
+ *                           .foregroundColor(.red)
+ *                   }
+ *               }
+ *               .task {
+ *                   await loadBookDetail()
+ *               }
+ *           }
+ *
+ *           func loadBookDetail() async {
+ *               isLoading = true
+ *               defer { isLoading = false }
+ *
+ *               do {
+ *                   book = try await BookService.shared.getBookDetail(bookId: bookId)
+ *               } catch {
+ *                   errorMessage = error.localizedDescription
+ *               }
+ *           }
+ *       }
+ *       ```
  *     tags: [Books]
  *     parameters:
  *       - in: path

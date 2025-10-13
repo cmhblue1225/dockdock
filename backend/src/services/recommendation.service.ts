@@ -31,7 +31,8 @@ export async function getPersonalizedRecommendations(
             publisher,
             cover_image_url,
             description,
-            category
+            category,
+            aladin_id
           )
         `
         )
@@ -44,6 +45,7 @@ export async function getPersonalizedRecommendations(
       if (cachedRecs && cachedRecs.length >= limit) {
         return cachedRecs.map((rec: any) => ({
           id: rec.book.id,
+          aladinId: rec.book.aladin_id,
           title: rec.book.title,
           author: rec.book.author,
           publisher: rec.book.publisher,
@@ -192,6 +194,7 @@ export async function getPersonalizedRecommendations(
 
             recommendations.push({
               id: bookId,
+              aladinId: book.id,
               title: book.title,
               author: book.author,
               publisher: book.publisher,
@@ -234,7 +237,8 @@ export async function getTrendingBooks(limit: number = 10): Promise<RecommendedB
           publisher,
           cover_image_url,
           description,
-          category
+          category,
+          aladin_id
         )
       `
       )
@@ -249,6 +253,7 @@ export async function getTrendingBooks(limit: number = 10): Promise<RecommendedB
 
     return trendingBooks.map((tb: any) => ({
       id: tb.book.id,
+      aladinId: tb.book.aladin_id,
       title: tb.book.title,
       author: tb.book.author,
       publisher: tb.book.publisher,
@@ -278,6 +283,7 @@ async function getRecentBooks(limit: number): Promise<RecommendedBook[]> {
   return (
     books?.map((book) => ({
       id: book.id,
+      aladinId: book.aladin_id,
       title: book.title,
       author: book.author,
       publisher: book.publisher,

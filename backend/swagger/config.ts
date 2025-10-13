@@ -6,7 +6,57 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: '독독 (DockDock) API',
       version: '1.0.0',
-      description: '독서 관리 플랫폼 API 문서 - iOS 및 Web 앱용',
+      description: `
+# 독독 (DockDock) API 문서
+
+독서 관리 플랫폼을 위한 RESTful API입니다.
+
+## 📱 iOS 개발자 가이드
+
+Swift를 사용한 상세한 구현 가이드는 다음 문서를 참고하세요:
+- [Swift 완전 가이드 문서](https://github.com/yourusername/dockdock/blob/main/backend/swagger/swift-guide.md)
+
+## 🔐 인증
+
+모든 인증이 필요한 API는 Bearer 토큰을 사용합니다:
+
+\`\`\`
+Authorization: Bearer YOUR_JWT_TOKEN
+\`\`\`
+
+## 🌐 Base URL
+
+- **개발**: \`http://localhost:3000/api/v1\`
+- **프로덕션**: \`https://dockdock-production.up.railway.app/api/v1\`
+
+## 📦 응답 형식
+
+모든 API는 다음 형식으로 응답합니다:
+
+\`\`\`json
+{
+  "success": true,
+  "message": "요청이 성공했습니다",
+  "data": { ... }
+}
+\`\`\`
+
+## 🚀 빠른 시작 (Swift)
+
+\`\`\`swift
+// 1. 책 검색
+let books = try await BookService.shared.searchBooks(query: "클린코드")
+
+// 2. 위시리스트에 추가
+let readingBook = try await ReadingBookService.shared.addToWishlist(bookId: book.id)
+
+// 3. 독서 기록 작성
+let record = try await RecordService.shared.createRecord(
+    readingBookId: readingBook.id,
+    content: "오늘의 독서 기록"
+)
+\`\`\`
+      `,
       contact: {
         name: 'DockDock API Support',
         email: 'support@dockdock.app'

@@ -74,6 +74,7 @@ export interface Recommendation {
  */
 export interface RecommendedBook {
   id: string;
+  aladinId?: string;
   title: string;
   author: string | null;
   publisher: string | null;

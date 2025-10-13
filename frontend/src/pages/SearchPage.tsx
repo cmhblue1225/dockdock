@@ -171,7 +171,7 @@ export default function SearchPage() {
                     <div
                       key={book.id}
                       onClick={() => {
-                        setBookDetailId(book.id);
+                        setBookDetailId(book.aladinId || book.id);
                         setIsBookDetailOpen(true);
                       }}
                       className="group cursor-pointer"
@@ -213,7 +213,7 @@ export default function SearchPage() {
                     <div
                       key={book.id}
                       onClick={() => {
-                        setBookDetailId(book.id);
+                        setBookDetailId(book.aladinId || book.id);
                         setIsBookDetailOpen(true);
                       }}
                       className="flex gap-4 bg-surface p-4 rounded-xl shadow-custom hover:shadow-custom-lg transition-all cursor-pointer group hover:scale-[1.02]"
