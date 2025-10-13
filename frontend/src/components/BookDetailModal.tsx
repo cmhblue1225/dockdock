@@ -73,11 +73,28 @@ export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailM
       return;
     }
 
+    if (!book) return;
+
     try {
       setIsAddingToWishlist(true);
 
+      // 1. 먼저 books 테이블에 책 등록 (중복이면 기존 UUID 반환)
+      const bookResponse = await api.post('/api/v1/books', {
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher,
+        cover_image_url: book.coverImage,
+        isbn: book.isbn,
+        isbn13: book.isbn13,
+        page_count: book.pageCount,
+        aladin_id: bookId, // 알라딘 itemId
+      });
+
+      const dbBookId = bookResponse.data.data.id;
+
+      // 2. reading_books 테이블에 등록
       const response = await api.post('/api/v1/reading-books', {
-        book_id: bookId,
+        book_id: dbBookId,
         status: 'wishlist',
       });
 
