@@ -32,7 +32,7 @@ export default function SearchPage() {
     queryFn: async () => {
       if (!activeSearch) return null;
 
-      const response = await api.get('/api/books', {
+      const response = await api.get('/api/v1/books', {
         params: { search: activeSearch }
       });
 

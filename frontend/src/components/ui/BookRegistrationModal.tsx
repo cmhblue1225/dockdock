@@ -33,7 +33,7 @@ export default function BookRegistrationModal({ isOpen, onClose, book }: BookReg
   // 책을 books 테이블에 먼저 등록 (없으면)
   const createBookMutation = useMutation({
     mutationFn: async (bookData: Book) => {
-      const response = await api.post('/api/books', {
+      const response = await api.post('/api/v1/books', {
         title: bookData.title,
         author: bookData.author,
         publisher: bookData.publisher,
