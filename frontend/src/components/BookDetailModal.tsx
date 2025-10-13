@@ -39,6 +39,8 @@ export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailM
   const [error, setError] = useState<string | null>(null);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [addedToWishlist, setAddedToWishlist] = useState(false);
+  const [isStartingReading, setIsStartingReading] = useState(false);
+  const [startedReading, setStartedReading] = useState(false);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -113,6 +115,59 @@ export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailM
       }
     } finally {
       setIsAddingToWishlist(false);
+    }
+  };
+
+  const handleStartReading = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다');
+      return;
+    }
+
+    if (!book) return;
+
+    try {
+      setIsStartingReading(true);
+
+      // 1. 먼저 books 테이블에 책 등록 (중복이면 기존 UUID 반환)
+      const bookResponse = await api.post('/api/v1/books', {
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher,
+        cover_image_url: book.coverImage,
+        isbn: book.isbn,
+        isbn13: book.isbn13,
+        page_count: book.pageCount,
+        aladin_id: bookId, // 알라딘 itemId
+      });
+
+      const dbBookId = bookResponse.data.data.id;
+
+      // 2. reading_books 테이블에 읽기 시작으로 등록
+      const response = await api.post('/api/v1/reading-books', {
+        book_id: dbBookId,
+        status: 'reading',
+        total_pages: book.pageCount || null,
+      });
+
+      if (response.data.success) {
+        setStartedReading(true);
+        setTimeout(() => {
+          setStartedReading(false);
+          onClose();
+        }, 1500);
+      }
+    } catch (err: any) {
+      console.error('Failed to start reading:', err);
+      const errorMessage = err.response?.data?.message || err.message;
+
+      if (errorMessage.includes('이미') || err.response?.status === 409) {
+        alert('이미 읽고 있는 책입니다');
+      } else {
+        alert('읽기 시작에 실패했습니다');
+      }
+    } finally {
+      setIsStartingReading(false);
     }
   };
 
@@ -191,6 +246,21 @@ export default function BookDetailModal({ bookId, isOpen, onClose }: BookDetailM
                         </div>
 
                         {/* Action Buttons */}
+                        <motion.button
+                          onClick={handleStartReading}
+                          disabled={isStartingReading || startedReading}
+                          className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                            startedReading
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          whileHover={{ scale: startedReading ? 1 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <BookOpen className="w-5 h-5" />
+                          {startedReading ? '읽기 시작됨!' : isStartingReading ? '처리 중...' : '읽기 시작하기'}
+                        </motion.button>
+
                         <motion.button
                           onClick={handleAddToWishlist}
                           disabled={isAddingToWishlist || addedToWishlist}
