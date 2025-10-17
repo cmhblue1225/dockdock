@@ -1,5 +1,6 @@
 import { supabase } from './supabase.service';
 import { getOpenAIService } from './openai.service';
+import { getAladinClient } from './aladin.service';
 import {
   calculateBigFiveScores,
   generateBigFiveProfile,
@@ -365,7 +366,7 @@ function generateReadingDirections(preference: any, bigFiveScores: any): Reading
 }
 
 /**
- * 추천 도서 생성 (AI 기반)
+ * 추천 도서 생성 (AI 기반 + 알라딘 API 실제 검색)
  */
 async function generateRecommendedBooks(
   userId: string,
@@ -375,14 +376,16 @@ async function generateRecommendedBooks(
 ): Promise<RecommendedBookForReport[]> {
   try {
     const openAI = getOpenAIService();
+    const aladinClient = getAladinClient();
 
-    // OpenAI에 확장된 선호도 전달
-    // 페르소나와 Big Five는 프롬프트에 텍스트로 포함됨
+    console.log('[generateRecommendedBooks] OpenAI로 추천 도서 생성 시작');
+
+    // 1. OpenAI에 확장된 선호도 전달하여 10권 추천 받기 (여유있게)
     const recommendations = await openAI.generatePersonalizedRecommendations(
       preference.preferred_genres || [],
       [],
       [],
-      8, // 8권 추천
+      10, // 10권 추천 (알라딘에서 못 찾을 것을 대비)
       {
         reading_purposes: preference.reading_purposes || [],
         preferred_length: preference.preferred_length,
@@ -395,17 +398,94 @@ async function generateRecommendedBooks(
       }
     );
 
-    // 알라딘 API로 실제 책 검색은 recommendation.service.ts와 동일한 로직 사용
-    // 여기서는 간단히 OpenAI 추천을 그대로 반환
-    return recommendations.map((rec, index) => ({
-      id: `temp-${index}`, // 임시 ID
-      title: rec.title,
-      author: rec.author || '저자 미상',
-      reason: rec.reason,
-      matchScore: rec.score,
-    }));
+    console.log(`[generateRecommendedBooks] OpenAI 추천 받음: ${recommendations.length}권`);
+
+    // 2. 알라딘 API로 실제 책 검색 + 데이터베이스 저장
+    const bookResults = await Promise.all(
+      recommendations.map(async (rec) => {
+        try {
+          console.log(`[generateRecommendedBooks] 알라딘 검색: "${rec.title}"`);
+
+          // 제목으로 검색
+          const { books: foundBooks } = await aladinClient.searchBooks({
+            query: rec.title,
+            queryType: 'Title',
+            maxResults: 1,
+          });
+
+          if (foundBooks.length > 0) {
+            const aladinBook = foundBooks[0];
+            console.log(`[generateRecommendedBooks] 알라딘에서 발견: "${aladinBook.title}" (ISBN: ${aladinBook.isbn13})`);
+
+            // 이미 DB에 있는지 확인
+            const { data: existingBook } = await supabase
+              .from('books')
+              .select('id, aladin_id, title, author, cover_image_url')
+              .eq('isbn13', aladinBook.isbn13)
+              .single();
+
+            let book = existingBook;
+
+            // 없으면 새로 저장
+            if (!book) {
+              console.log(`[generateRecommendedBooks] 새 책 저장: "${aladinBook.title}"`);
+              const { data: newBook, error: insertError } = await supabase
+                .from('books')
+                .insert({
+                  title: aladinBook.title,
+                  author: aladinBook.author,
+                  publisher: aladinBook.publisher,
+                  cover_image_url: aladinBook.coverImage,
+                  isbn: aladinBook.isbn,
+                  isbn13: aladinBook.isbn13,
+                  page_count: aladinBook.pageCount,
+                  description: aladinBook.description,
+                  category: aladinBook.categoryName,
+                  aladin_id: aladinBook.id,
+                })
+                .select('id, aladin_id, title, author, cover_image_url')
+                .single();
+
+              if (insertError) {
+                console.error(`[generateRecommendedBooks] 책 저장 실패:`, insertError);
+                return null;
+              }
+
+              book = newBook;
+              console.log(`[generateRecommendedBooks] 책 저장 완료: ID ${book?.id}`);
+            } else {
+              console.log(`[generateRecommendedBooks] 기존 책 사용: ID ${book.id}`);
+            }
+
+            if (book) {
+              return {
+                id: book.id,                        // ✅ 실제 DB ID
+                aladinId: book.aladin_id,           // ✅ 알라딘 상품 ID
+                title: book.title,
+                author: book.author,
+                coverImage: book.cover_image_url,
+                reason: rec.reason,
+                matchScore: rec.score,
+              };
+            }
+          } else {
+            console.log(`[generateRecommendedBooks] 알라딘에서 못 찾음: "${rec.title}"`);
+          }
+        } catch (error) {
+          console.error(`[generateRecommendedBooks] 책 검색 실패: ${rec.title}`, error);
+        }
+        return null;
+      })
+    );
+
+    // 3. null 제거 후 상위 8개만 반환
+    const validBooks = bookResults.filter(book => book !== null) as RecommendedBookForReport[];
+    console.log(`[generateRecommendedBooks] 완료 - 총 ${validBooks.length}권 반환`);
+
+    return validBooks.slice(0, 8);
+
   } catch (error) {
-    console.error('추천 도서 생성 실패:', error);
+    console.error('[generateRecommendedBooks] 추천 도서 생성 실패:', error);
     return [];
   }
 }
