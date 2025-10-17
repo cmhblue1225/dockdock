@@ -127,9 +127,9 @@ export async function generateOnboardingReport(
 function generateReadingDNA(preference: any, bigFiveScores: any): ReadingDNA[] {
   const dna: ReadingDNA[] = [];
 
-  // 1. 독서 목적 기반 DNA
+  // 1. 독서 목적 기반 DNA (하이픈과 언더스코어 모두 지원)
   const purposes = preference.reading_purposes || [];
-  if (purposes.includes('knowledge')) {
+  if (purposes.includes('learning') || purposes.includes('knowledge')) {
     dna.push({
       title: '지식 탐구자',
       description: '새로운 것을 배우고 이해하는 것에 큰 즐거움을 느낍니다',
@@ -137,7 +137,15 @@ function generateReadingDNA(preference: any, bigFiveScores: any): ReadingDNA[] {
       color: '#4F6815',
     });
   }
-  if (purposes.includes('emotion')) {
+  if (purposes.includes('self-development') || purposes.includes('self_development')) {
+    dna.push({
+      title: '성장 추구자',
+      description: '끊임없이 자기계발하며 더 나은 사람이 되고자 합니다',
+      icon: '🌱',
+      color: '#10B981',
+    });
+  }
+  if (purposes.includes('emotion') || purposes.includes('emotional_relief') || purposes.includes('emotional-relief')) {
     dna.push({
       title: '감정 여행자',
       description: '책을 통해 다양한 감정을 경험하고 공감하는 것을 즐깁니다',
@@ -145,12 +153,20 @@ function generateReadingDNA(preference: any, bigFiveScores: any): ReadingDNA[] {
       color: '#8B4513',
     });
   }
-  if (purposes.includes('entertainment')) {
+  if (purposes.includes('entertainment') || purposes.includes('leisure')) {
     dna.push({
       title: '재미 추구자',
       description: '흥미진진한 이야기와 즐거운 독서 경험을 중요하게 생각합니다',
       icon: '🎭',
       color: '#FF6B6B',
+    });
+  }
+  if (purposes.includes('inspiration')) {
+    dna.push({
+      title: '영감 탐색자',
+      description: '새로운 아이디어와 창의적 영감을 얻기 위해 독서합니다',
+      icon: '💡',
+      color: '#F59E0B',
     });
   }
 
@@ -211,27 +227,41 @@ function generateReadingStyleAnalysis(
 ): ReadingStyleAnalysis {
   const styles: Array<{ title: string; description: string; score: number }> = [];
 
-  // 1. 목적 기반 스타일
+  // 1. 목적 기반 스타일 (하이픈과 언더스코어 모두 지원)
   const purposes = preference.reading_purposes || [];
-  if (purposes.includes('knowledge')) {
+  if (purposes.includes('learning') || purposes.includes('knowledge')) {
     styles.push({
       title: '학습 지향형',
       description: '지식을 쌓고 통찰을 얻기 위해 독서합니다',
       score: 40,
     });
   }
-  if (purposes.includes('emotion')) {
+  if (purposes.includes('self-development') || purposes.includes('self_development')) {
+    styles.push({
+      title: '성장 지향형',
+      description: '자기계발과 성장을 위해 독서합니다',
+      score: 38,
+    });
+  }
+  if (purposes.includes('emotion') || purposes.includes('emotional_relief') || purposes.includes('emotional-relief')) {
     styles.push({
       title: '감정 공명형',
       description: '감정적 연결과 공감을 중요하게 생각합니다',
       score: 35,
     });
   }
-  if (purposes.includes('entertainment')) {
+  if (purposes.includes('entertainment') || purposes.includes('leisure')) {
     styles.push({
       title: '오락 추구형',
       description: '즐거움과 재미를 위해 책을 읽습니다',
       score: 30,
+    });
+  }
+  if (purposes.includes('inspiration')) {
+    styles.push({
+      title: '영감 추구형',
+      description: '새로운 아이디어와 영감을 얻기 위해 독서합니다',
+      score: 36,
     });
   }
 
@@ -248,6 +278,15 @@ function generateReadingStyleAnalysis(
       title: '체계형',
       description: '계획적이고 꾸준한 독서를 선호합니다',
       score: 20,
+    });
+  }
+
+  // 스타일이 없으면 기본값 추가
+  if (styles.length === 0) {
+    styles.push({
+      title: '균형 추구형',
+      description: '다양한 목적으로 책을 읽는 균형잡힌 독서가입니다',
+      score: 50,
     });
   }
 
