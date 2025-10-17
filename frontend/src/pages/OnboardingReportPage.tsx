@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import api from '../lib/api';
 import type { OnboardingReport } from '../types/report';
+import BookDetailModal from '../components/BookDetailModal';
 
 /**
  * 온보딩 레포트 페이지 (Simple Version)
@@ -22,6 +23,8 @@ export default function OnboardingReportPage() {
   const [report, setReport] = useState<OnboardingReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -287,11 +290,18 @@ export default function OnboardingReportPage() {
               {report.recommendedBooks.map((book, index) => (
                 <motion.div
                   key={book.id}
-                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6"
+                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 cursor-pointer"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1 + index * 0.1 }}
-                  whileHover={{ y: -5 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    // aladinId가 있으면 사용, 없으면 일반 id 사용
+                    const bookId = book.aladinId || book.id;
+                    setSelectedBookId(bookId);
+                    setIsModalOpen(true);
+                  }}
                 >
                   <h3 className="text-lg font-bold mb-2">{book.title}</h3>
                   <p className="text-sm text-purple-300 mb-3">{book.author}</p>
@@ -301,6 +311,9 @@ export default function OnboardingReportPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-purple-200">매칭 점수</span>
                     <span className="text-lg font-bold text-green-400">{book.matchScore}%</span>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <span className="text-xs text-purple-400">클릭하여 자세히 보기 →</span>
                   </div>
                 </motion.div>
               ))}
@@ -341,6 +354,18 @@ export default function OnboardingReportPage() {
           <p className="mt-4 text-sm text-purple-300">이 레포트는 프로필 페이지에서 언제든 다시 볼 수 있습니다</p>
         </motion.div>
       </div>
+
+      {/* 책 상세 모달 */}
+      {selectedBookId && (
+        <BookDetailModal
+          bookId={selectedBookId}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedBookId(null);
+          }}
+        />
+      )}
     </motion.div>
   );
 }
