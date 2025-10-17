@@ -445,7 +445,11 @@ async function saveReport(userId: string, report: OnboardingReport): Promise<voi
         })
         .eq('user_id', userId);
     } else {
+      // id 생성: rep_timestamp_userid 형식
+      const reportId = `rep_${Date.now()}_${userId.substring(0, 8)}`;
+
       await supabase.from('onboarding_reports').insert({
+        id: reportId,
         user_id: userId,
         report_data: report,
       });
