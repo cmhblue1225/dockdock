@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
+import { useToast } from '../../hooks/useToast';
 import api from '../../lib/api';
 
 interface NavItem {
@@ -21,15 +22,18 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
+  const { showToast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // 로그아웃 핸들러
   const handleSignOut = async () => {
     try {
       await signOut();
+      showToast('로그아웃되었습니다', 'success');
       navigate('/login');
     } catch (error) {
       console.error('로그아웃 실패:', error);
+      showToast('로그아웃에 실패했습니다', 'error');
     }
   };
 
